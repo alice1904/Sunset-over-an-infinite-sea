@@ -228,16 +228,18 @@ void initGPUprogram() {
 void initCPUgeometry() {
   // TODO: add vertices and indices for your mesh(es)
   g_vertexPositions = { // the array of vertex Colors [x0, y0, z0, x1, y1, z1, ...]
-    0.f, 0.f, 0.f,
-    1.f, 0.f, 0.f,
-    0.f, 1.f, 0.f
+    -1.f, -1.f, 0.f,
+    -1.f, 1.f, 0.f,
+    1.f, -1.f, 0.f,
+    1.f, 1.f, 0.f
   };
   g_vertexColors = { // the array of vertex Colors [x0, y0, z0, x1, y1, z1, ...]
     1.f, 0.f, 0.f,
     0.f, 0.f, 1.f,
-    0.f, 1.f, 0.f
+    0.f, 1.f, 0.f,
+    1.f, 0.f, 0.f
   };
-  g_triangleIndices = { 0, 1, 2 };
+  g_triangleIndices = { 0, 2, 1, 3, 1, 2};
 }
 
 void initGPUgeometry() {
@@ -262,8 +264,8 @@ void initGPUgeometry() {
   glCreateBuffers(1, &g_posVbo);
   glBindBuffer(GL_ARRAY_BUFFER, g_posVbo);
   glNamedBufferStorage(g_posVbo, vertexBufferSize, g_vertexPositions.data(), GL_DYNAMIC_STORAGE_BIT); // Create a data storage on the GPU and fill it from a CPU array
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), 0);
-  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), 0); //index, (vertex) size, type, normalized, stride, (offset) pointer
+  glEnableVertexAttribArray(0); //layout
 #endif
 
 vertexBufferSize = sizeof(float)*g_vertexColors.size(); // Gather the size of the buffer from the CPU-side vector
