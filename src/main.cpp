@@ -238,7 +238,7 @@ void initCPUgeometry() {
     1.f, 1.f, 0.f
   };
   g_vertexColors = { // the array of vertex Colors [x0, y0, z0, x1, y1, z1, ...]
-    1.f, 0.f, 0.f,
+    1.f, 0.f, 1.f,
     0.f, 0.f, 1.f,
     0.f, 1.f, 0.f,
     1.f, 0.f, 0.f
@@ -307,7 +307,7 @@ vertexBufferSize = sizeof(float)*g_vertexColors.size(); // Gather the size of th
 void initGPUstorageBuffer(){
   //create buffer
 
-  size_t bufferSize = sizeof(float)*g_vertexPositions.size();
+  size_t bufferSize = sizeof(float)*g_vertexColors.size();
 
   #ifdef _MY_OPENGL_IS_33_
   glGenBuffers(1, &g_sbo);
@@ -322,7 +322,7 @@ void initGPUstorageBuffer(){
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_sbo);
   glBufferStorage(
             GL_SHADER_STORAGE_BUFFER, bufferSize, 
-            g_vertexPositions.data(), GL_DYNAMIC_STORAGE_BIT);
+            g_vertexColors.data(), GL_DYNAMIC_STORAGE_BIT);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, g_sbo);
   //glNamedBufferStorage(g_sbo, vertexBufferSize, g_vertexColors.data(), GL_DYNAMIC_STORAGE_BIT); // Create a data storage on the GPU and fill it from a CPU array
   //glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), 0);
