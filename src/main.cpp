@@ -18,7 +18,8 @@
 
 #define _USE_MATH_DEFINES
 
-#include <glad/gl.h>
+//#include <glad/gl.h>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
@@ -54,6 +55,9 @@ GLuint g_vao = 0;
 GLuint g_posVbo = 0;
 GLuint g_ibo = 0;
 GLuint g_earthTexID;
+
+//storage buffer (this will store the scene data)
+GLuint g_sbo = 0; //stoagre buffer object
 
 // All vertex Colors packed in one array [x0, y0, z0, x1, y1, z1, ...]
 std::vector<float> g_vertexPositions;
@@ -171,7 +175,7 @@ void initGLFW() {
 
 void initOpenGL() {
   // Load extensions for modern OpenGL
-  if(!gladLoadGL(glfwGetProcAddress)) {
+  if(!gladLoadGL()) { //!gladLoadGL(glfwGetProcAddress)
     std::cerr << "ERROR: Failed to initialize OpenGL context" << std::endl;
     glfwTerminate();
     std::exit(EXIT_FAILURE);
@@ -290,6 +294,7 @@ vertexBufferSize = sizeof(float)*g_vertexColors.size(); // Gather the size of th
   glGenBuffers(1, &g_ibo);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_ibo);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBufferSize, g_triangleIndices.data(), GL_DYNAMIC_READ);
+  
 #else
   glCreateBuffers(1, &g_ibo);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_ibo);
@@ -297,6 +302,39 @@ vertexBufferSize = sizeof(float)*g_vertexColors.size(); // Gather the size of th
 #endif
 
   glBindVertexArray(0); // deactivate the VAO for now, will be activated again when rendering
+}
+
+void initGPUstorageBuffer(){
+  //create buffer
+
+  size_t bufferSize = sizeof(float)*g_vertexPositions.size();
+
+  #ifdef _MY_OPENGL_IS_33_
+  glGenBuffers(1, &g_sbo);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_sbo);
+  glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, g_vertexColors.data(), GL_DYNAMIC_READ);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, g_sbo);
+  //glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), 0);
+  //glEnableVertexAttribArray(1);
+  
+#else
+  glCreateBuffers(1, &g_sbo);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_sbo);
+  glBufferStorage(
+            GL_SHADER_STORAGE_BUFFER, bufferSize, 
+            g_vertexPositions.data(), GL_DYNAMIC_STORAGE_BIT);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, g_sbo);
+  //glNamedBufferStorage(g_sbo, vertexBufferSize, g_vertexColors.data(), GL_DYNAMIC_STORAGE_BIT); // Create a data storage on the GPU and fill it from a CPU array
+  //glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), 0);
+  //glEnableVertexAttribArray(1);
+#endif
+
+}
+
+void initGPU(){
+  initGPUgeometry();
+  initGPUstorageBuffer();
+  initGPUprogram();
 }
 
 void initCamera() {
@@ -313,8 +351,7 @@ void init() {
   initGLFW();
   initOpenGL();
   initCPUgeometry();
-  initGPUprogram();
-  initGPUgeometry();
+  initGPU();
   initCamera();
 }
 
@@ -329,14 +366,14 @@ void clear() {
 void render() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Erase the color and z buffers.
 
-  const glm::mat4 viewMatrix = g_camera.computeViewMatrix();
-  const glm::mat4 projMatrix = g_camera.computeProjectionMatrix();
+  // const glm::mat4 viewMatrix = g_camera.computeViewMatrix();
+  // const glm::mat4 projMatrix = g_camera.computeProjectionMatrix();
 
   glActiveTexture(GL_TEXTURE0); // activate texture unit 0
   glBindTexture(GL_TEXTURE_2D, g_earthTexID);
 
-  glUniformMatrix4fv(glGetUniformLocation(g_program, "viewMat"), 1, GL_FALSE, glm::value_ptr(viewMatrix)); // compute the view matrix of the camera and pass it to the GPU program
-  glUniformMatrix4fv(glGetUniformLocation(g_program, "projMat"), 1, GL_FALSE, glm::value_ptr(projMatrix)); // compute the projection matrix of the camera and pass it to the GPU program
+  // glUniformMatrix4fv(glGetUniformLocation(g_program, "viewMat"), 1, GL_FALSE, glm::value_ptr(viewMatrix)); // compute the view matrix of the camera and pass it to the GPU program
+  // glUniformMatrix4fv(glGetUniformLocation(g_program, "projMat"), 1, GL_FALSE, glm::value_ptr(projMatrix)); // compute the projection matrix of the camera and pass it to the GPU program
 
   glBindVertexArray(g_vao);     // activate the VAO storing geometry data
   glDrawElements(GL_TRIANGLES, g_triangleIndices.size(), GL_UNSIGNED_INT, 0); // Call for rendering: stream the current GPU geometry through the current GPU program

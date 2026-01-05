@@ -21,13 +21,13 @@ cmake_minimum_required(VERSION 3.10)
 SET(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 SET(CMAKE_CXX_STANDARD 11)
 SET(CMAKE_CXX_STANDARD_REQUIRED True)
-add_compile_definitions(_MY_OPENGL_IS_33_)
+#add_compile_definitions(_MY_OPENGL_IS_33_)
 
 project(tpOpenGL)
 
 add_executable(${PROJECT_NAME} main.cpp)
 
-target_sources(${PROJECT_NAME} PRIVATE dep/glad/src/gl.c)
+target_sources(${PROJECT_NAME} PRIVATE dep/glad/src/glad.c)
 target_include_directories(${PROJECT_NAME} PRIVATE dep/glad/include/)
 
 add_subdirectory(dep/glfw)
