@@ -14,7 +14,7 @@ in vec3 fColor;
 out vec4 color;	  // Shader output: the color response attached to this fragment
 
 
-layout(std430, binding = 0) buffer sceneData {
+layout(std430, binding = 2) buffer sceneData {
     vec3[] data;
 };
 

@@ -25,7 +25,7 @@ SET(CMAKE_CXX_STANDARD_REQUIRED True)
 
 project(tpOpenGL)
 
-add_executable(${PROJECT_NAME} main.cpp)
+add_executable(${PROJECT_NAME} main.cpp scene.cpp)
 
 target_sources(${PROJECT_NAME} PRIVATE dep/glad/src/glad.c)
 target_include_directories(${PROJECT_NAME} PRIVATE dep/glad/include/)

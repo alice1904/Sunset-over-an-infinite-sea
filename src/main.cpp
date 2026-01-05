@@ -36,6 +36,7 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include "scene.h"
 
 // constants
 const static float kSizeSun = 1;
@@ -57,13 +58,20 @@ GLuint g_ibo = 0;
 GLuint g_earthTexID;
 
 //storage buffer (this will store the scene data)
-GLuint g_sbo = 0; //stoagre buffer object
+GLuint g_sbo = 0;
+GLuint g_vertexSbo = 0; //storage buffer object
+GLuint g_triangleSbo = 0;
 
 // All vertex Colors packed in one array [x0, y0, z0, x1, y1, z1, ...]
 std::vector<float> g_vertexPositions;
 std::vector<float> g_vertexColors;
 // All triangle indices packed in one array [v00, v01, v02, v10, v11, v12, ...] with vij the index of j-th vertex of the i-th triangle
 std::vector<unsigned int> g_triangleIndices;
+
+
+
+//Scene
+Scene scene = Scene();
 
 
 
@@ -228,6 +236,10 @@ void initGPUprogram() {
   // TODO: set shader variables, textures, etc.
 }
 
+void initScene(){
+  scene.init();
+}
+
 // Define your mesh(es) in the CPU memory
 void initCPUgeometry() {
   // TODO: add vertices and indices for your mesh(es)
@@ -304,30 +316,37 @@ vertexBufferSize = sizeof(float)*g_vertexColors.size(); // Gather the size of th
   glBindVertexArray(0); // deactivate the VAO for now, will be activated again when rendering
 }
 
+
+
 void initGPUstorageBuffer(){
   //create buffer
 
   size_t bufferSize = sizeof(float)*g_vertexColors.size();
 
-  #ifdef _MY_OPENGL_IS_33_
-  glGenBuffers(1, &g_sbo);
-  glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_sbo);
-  glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, g_vertexColors.data(), GL_DYNAMIC_READ);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, g_sbo);
-  //glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), 0);
-  //glEnableVertexAttribArray(1);
   
-#else
   glCreateBuffers(1, &g_sbo);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_sbo);
   glBufferStorage(
             GL_SHADER_STORAGE_BUFFER, bufferSize, 
             g_vertexColors.data(), GL_DYNAMIC_STORAGE_BIT);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, g_sbo);
-  //glNamedBufferStorage(g_sbo, vertexBufferSize, g_vertexColors.data(), GL_DYNAMIC_STORAGE_BIT); // Create a data storage on the GPU and fill it from a CPU array
-  //glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), 0);
-  //glEnableVertexAttribArray(1);
-#endif
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, g_sbo);
+
+  bufferSize = sizeof(glm::vec3)*scene.vertexPositions.size();
+  glCreateBuffers(1, &g_vertexSbo);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_vertexSbo);
+  glBufferStorage(
+            GL_SHADER_STORAGE_BUFFER, bufferSize, 
+            scene.vertexPositions.data(), GL_DYNAMIC_STORAGE_BIT);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, g_vertexSbo);
+
+
+  // bufferSize = sizeof(glm::vec3)*scene.triangleIndices.size();
+  // glCreateBuffers(1, &g_triangleSbo);
+  // glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_triangleSbo);
+  // glBufferStorage(
+  //           GL_SHADER_STORAGE_BUFFER, bufferSize, 
+  //           scene.triangleIndices.data(), GL_DYNAMIC_STORAGE_BIT);
+  // glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, g_triangleSbo);
 
 }
 
@@ -350,6 +369,7 @@ void initCamera() {
 void init() {
   initGLFW();
   initOpenGL();
+  initScene();
   initCPUgeometry();
   initGPU();
   initCamera();
