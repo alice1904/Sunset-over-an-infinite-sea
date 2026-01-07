@@ -13,6 +13,13 @@ in vec3 fColor;
 
 out vec4 color;	  // Shader output: the color response attached to this fragment
 
+layout(std430, binding = 0) buffer sceneVertexPositions {
+    vec3[] vertexPositions;
+};
+
+layout(std430, binding = 1) buffer scenetriangleIndices {
+    uvec3[] triangleIndices;
+};
 
 layout(std430, binding = 2) buffer sceneData {
     vec3[] data;
@@ -20,8 +27,11 @@ layout(std430, binding = 2) buffer sceneData {
 
 
 void main() {
-	vec3 texColor = texture(material.albedoTex, fPosition.xy).rgb;
-	color = vec4(texColor, 1.);
-	color = vec4(data[0], 1.0);
+	//vec3 texColor = texture(material.albedoTex, fPosition.xy).rgb;
+	//color = vec4(texColor, 1.);
+	color = vec4(vertexPositions[0], 1.0);
+	if(triangleIndices[1][0]==3){
+		color = vec4(1.0, 1.0, 0.0, 1.0);
+	}
 
 }

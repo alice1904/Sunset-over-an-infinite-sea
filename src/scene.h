@@ -17,7 +17,7 @@ class Scene {
         void init();
 
         std::vector<glm::vec3> vertexPositions;
-        std::vector<glm::vec3> triangleIndices;
+        std::vector<glm::uvec3> triangleIndices;
 
 };
 
