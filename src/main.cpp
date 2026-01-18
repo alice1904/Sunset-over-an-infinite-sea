@@ -40,11 +40,11 @@
 #include "scene.h"
 
 // constants
-const static float kSizeSun = 1;
-const static float kSizeEarth = 0.5;
-const static float kSizeMoon = 0.25;
-const static float kRadOrbitEarth = 10;
-const static float kRadOrbitMoon = 2;
+// const static float kSizeSun = 1;
+// const static float kSizeEarth = 0.5;
+// const static float kSizeMoon = 0.25;
+// const static float kRadOrbitEarth = 10;
+// const static float kRadOrbitMoon = 2;
 
 // Window parameters
 GLFWwindow *g_window = nullptr;
@@ -68,7 +68,12 @@ std::vector<float> g_vertexColors;
 // All triangle indices packed in one array [v00, v01, v02, v10, v11, v12, ...] with vij the index of j-th vertex of the i-th triangle
 std::vector<unsigned int> g_triangleIndices;
 
-
+//key input 
+bool key_right_pressed = false;
+bool key_left_pressed = false;
+bool key_up_pressed = false;
+bool key_down_pressed = false;
+bool key_shift_pressed = false;
 
 //Scene
 Scene scene = Scene();
@@ -288,6 +293,30 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
   } else if(action == GLFW_PRESS && (key == GLFW_KEY_ESCAPE || key == GLFW_KEY_Q)) {
     glfwSetWindowShouldClose(window, true); // Closes the application if the escape key is pressed
   }
+
+  else if(action == GLFW_PRESS && (key == GLFW_KEY_RIGHT)){
+    key_right_pressed = true;
+  } else if(action == GLFW_PRESS && (key == GLFW_KEY_LEFT)){
+    key_left_pressed = true;
+  } else if(action == GLFW_PRESS && (key == GLFW_KEY_UP)){
+    key_up_pressed = true;
+  } else if(action == GLFW_PRESS && (key == GLFW_KEY_DOWN)){
+    key_down_pressed = true;
+  } else if(action == GLFW_PRESS && (key == GLFW_KEY_RIGHT_SHIFT || key == GLFW_KEY_LEFT_SHIFT)){
+    key_shift_pressed = true;
+  } 
+
+  else if(action == GLFW_RELEASE && (key == GLFW_KEY_RIGHT)){
+    key_right_pressed = false;
+  } else if(action == GLFW_RELEASE && (key == GLFW_KEY_LEFT)){
+    key_left_pressed = false;
+  } else if(action == GLFW_RELEASE && (key == GLFW_KEY_UP)){
+    key_up_pressed = false;
+  } else if(action == GLFW_RELEASE && (key == GLFW_KEY_DOWN)){
+    key_down_pressed = false;
+  } else if(action == GLFW_RELEASE && (key == GLFW_KEY_RIGHT_SHIFT || key == GLFW_KEY_LEFT_SHIFT)){
+    key_shift_pressed = false;
+  } 
 }
 
 void errorCallback(int error, const char *desc) {
@@ -592,8 +621,40 @@ void render() {
 }
 
 // Update any accessible variable based on the current time
-void update(const float currentTimeInSec) {
-  // std::cout << currentTimeInSec << std::endl;
+void update(const float delta) {
+
+  //CAMERA
+  
+
+  if(key_shift_pressed){
+    if(key_right_pressed){
+      g_camera.rotate_right(delta);
+    }
+    else if(key_left_pressed){
+      g_camera.rotate_left(delta);
+    }
+    else if(key_up_pressed){
+      g_camera.move_forward(delta);
+    }
+    else if(key_down_pressed){
+      g_camera.move_backward(delta);
+    }
+  }
+  else{
+    if(key_right_pressed){
+      g_camera.move_right(delta);
+    }
+    else if(key_left_pressed){
+      g_camera.move_left(delta);
+    }
+    else if(key_up_pressed){
+      g_camera.move_up(delta);
+    }
+    else if(key_down_pressed){
+      g_camera.move_down(delta);
+    }
+  }
+
 
 }
 
@@ -601,8 +662,12 @@ int main(int argc, char ** argv) {
   init(); // Your initialization code (user interface, OpenGL states, scene with geometry, material, lights, etc)
 
   printf("number of triangles : %ld\n", scene.triangleIndices.size());
+  float currentTime;
+  float lastCurrentTime=static_cast<float>(glfwGetTime());
   while(!glfwWindowShouldClose(g_window)) {
-    update(static_cast<float>(glfwGetTime()));
+    currentTime = static_cast<float>(glfwGetTime());
+    update(lastCurrentTime-currentTime);
+    lastCurrentTime = currentTime;
     render();
     glfwSwapBuffers(g_window);
     glfwPollEvents();

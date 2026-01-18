@@ -7,11 +7,10 @@ void Scene::init(){
         glm::vec3(1.f, 0.f, 0.f),
         glm::vec3(0.f, 1.f, 0.f),
         glm::vec3(0.f, 0.f, 1.f)
+
     };
 
     triangleIndices = {
-        glm::uvec3(0, 1, 2),
-        glm::uvec3(3, 4, 5),
-        glm::uvec3(6, 7, 8)
+        glm::uvec3(0, 1, 2)
     };
 }
