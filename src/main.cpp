@@ -24,6 +24,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
+#include <glm/gtx/rotate_vector.hpp>
 
 #include <cstdlib>
 #include <iostream>
@@ -75,8 +76,60 @@ Scene scene = Scene();
 
 
 // Basic camera model
+// class Camera {
+// public:
+//   inline float getFov() const { return m_fov; }
+//   inline void setFoV(const float f) { m_fov = f; }
+//   inline float getAspectRatio() const { return m_aspectRatio; }
+//   inline void setAspectRatio(const float a) { m_aspectRatio = a; }
+//   inline float getNear() const { return m_near; }
+//   inline void setNear(const float n) { m_near = n; }
+//   inline float getFar() const { return m_far; }
+//   inline void setFar(const float n) { m_far = n; }
+//   inline void setColor(const glm::vec3 &p) { m_pos = p; }
+//   inline glm::vec3 getColor() { return m_pos; }
+
+//   inline glm::mat4 computeViewMatrix() const {
+//     return glm::lookAt(m_pos, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+//   }
+
+//   // Returns the projection matrix stemming from the camera intrinsic parameter.
+//   inline glm::mat4 computeProjectionMatrix() const {
+//     return glm::perspective(glm::radians(m_fov), m_aspectRatio, m_near, m_far);
+//   }
+
+  
+
+// private:
+//   glm::vec3 m_pos = glm::vec3(0, 0, 0);
+//   float m_fov = 45.f;        // Field of view, in degrees
+//   float m_aspectRatio = 1.f; // Ratio between the width and the height of the image
+//   float m_near = 0.1f; // Distance before which geometry is excluded from the rasterization process
+//   float m_far = 10.f; // Distance after which the geometry is excluded from the rasterization process
+// };
+// Camera g_camera;
+
+
 class Camera {
 public:
+
+  //TODO : impélemente key event to move the camera!
+
+  void init(const glm::vec3 &pos, const glm::vec3 &center, const glm::vec3 &up){
+    if(glm::dot(up, up)==0 || glm::dot(center-pos, center-pos)==0){
+      std::cerr << "ERROR: Failed to init Camera due to not allowed arguments" << std::endl;
+      glfwTerminate();
+      std::exit(EXIT_FAILURE);
+    }
+    
+    m_pos = pos;
+    m_center = center;
+
+    m_forward = normalize(center - pos);
+    m_right = normalize(cross(m_forward, up));
+    m_up = normalize(cross(m_right, m_forward));
+  }
+
   inline float getFov() const { return m_fov; }
   inline void setFoV(const float f) { m_fov = f; }
   inline float getAspectRatio() const { return m_aspectRatio; }
@@ -85,11 +138,13 @@ public:
   inline void setNear(const float n) { m_near = n; }
   inline float getFar() const { return m_far; }
   inline void setFar(const float n) { m_far = n; }
-  inline void setColor(const glm::vec3 &p) { m_pos = p; }
-  inline glm::vec3 getColor() { return m_pos; }
+  inline glm::vec3 getPosition() { return m_pos; }
+  inline glm::vec3 getForward() {return m_forward;}
+  inline glm::vec3 getRight() {return m_right;}
+  inline glm::vec3 getUp() {return m_up;}
 
   inline glm::mat4 computeViewMatrix() const {
-    return glm::lookAt(m_pos, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+    return glm::lookAt(m_pos, m_center, m_up);
   }
 
   // Returns the projection matrix stemming from the camera intrinsic parameter.
@@ -97,14 +152,106 @@ public:
     return glm::perspective(glm::radians(m_fov), m_aspectRatio, m_near, m_far);
   }
 
+
+  //move the camera
+
+  void move_right(float delta){
+    //change the position
+    m_pos = m_center + glm::rotate(m_pos-m_center, delta*move_angle_step, m_up); //rotate m_pos around up axis
+    //update the directions
+    updateForward();
+    updateRightFromUp();
+  }
+
+  void move_left(float delta){
+    //change the position
+    m_pos = m_center + glm::rotate(m_pos-m_center, -delta*move_angle_step, m_up); //rotate m_pos around up axis
+    //update the directions
+    updateForward();
+    updateRightFromUp();
+  }
+
+  void move_up(float delta){
+    //change the position
+    m_pos = m_center + glm::rotate(m_pos-m_center, -delta*move_angle_step, m_right); //rotate m_pos around up axis
+    //update the directions
+    updateForward();
+    updateUpFromRight();
+  }
+
+  void move_down(float delta){
+    //change the position
+    m_pos = m_center + glm::rotate(m_pos-m_center, delta*move_angle_step, m_right); //rotate m_pos around up axis
+    //update the directions
+    updateForward();
+    updateUpFromRight();
+  }
+
+  void move_forward(float delta){
+    glm::vec3 pos = m_pos + delta*move_step*m_forward;
+    //if pos is too close to the center or is on the other side of the center, 
+    //we don't update m_pos
+    if(glm::dot(m_center-pos, m_forward) >= min_distance_to_center){
+      m_pos = pos;
+    }
+  }
+
+  void move_backward(float delta){
+    m_pos = m_pos - delta*move_step*m_forward;
+  }
+
+  void rotate_right(float delta){
+    //change the direction
+    m_up = glm::rotate(m_up, -delta*move_angle_step, m_forward);
+    updateRightFromUp();
+  }
+
+  void rotate_left(float delta){
+    //change the direction
+    m_up = glm::rotate(m_up, delta*move_angle_step, m_forward);
+    updateRightFromUp();
+  }
+
+
 private:
-  glm::vec3 m_pos = glm::vec3(0, 0, 0);
+  const float move_angle_step = 1;
+  const float move_step = 10;
+  const float min_distance_to_center = 1;
+
+  glm::vec3 m_pos = glm::vec3(0, 0, -1);
+  glm::vec3 m_center = glm::vec3(0, 0, 0);
+  glm::vec3 m_up = glm::vec3(0, 1, 0);
+  glm::vec3 m_right = glm::vec3(1, 0, 0);
+  glm::vec3 m_forward = glm::vec3(0, 0, 1);
+
+
+  inline void setPosition(const glm::vec3 &p) { m_pos = p; }
+
+  inline void updateForward(){
+    //update the forward vec3
+    m_forward = glm::normalize(m_center-m_pos);
+  }
+
+  inline void updateRightFromUp(){
+    //update the right vec3 from forward and up vec3
+    m_right = glm::normalize(glm::cross(m_forward, m_up));
+  }
+
+  inline void updateUpFromRight(){
+    //update the up vec3 from forward and right vec3
+    m_up = glm::normalize(glm::cross(m_right, m_forward));
+  }
+
+
   float m_fov = 45.f;        // Field of view, in degrees
   float m_aspectRatio = 1.f; // Ratio between the width and the height of the image
   float m_near = 0.1f; // Distance before which geometry is excluded from the rasterization process
   float m_far = 10.f; // Distance after which the geometry is excluded from the rasterization process
 };
 Camera g_camera;
+
+
+
 
 GLuint loadTextureFromFileToGPU(const std::string &filename) {
   // Loading the image in CPU memory using stb_image
@@ -383,11 +530,17 @@ void initGPU(){
 void initCamera() {
   int width, height;
   glfwGetWindowSize(g_window, &width, &height);
+  g_camera.init(glm::vec3(0.0, 0.0, -3.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
   g_camera.setAspectRatio(static_cast<float>(width)/static_cast<float>(height));
-
-  g_camera.setColor(glm::vec3(0.0, 0.0, 3.0));
   g_camera.setNear(0.1);
   g_camera.setFar(80.1);
+  // int width, height;
+  // glfwGetWindowSize(g_window, &width, &height);
+  // g_camera.setAspectRatio(static_cast<float>(width)/static_cast<float>(height));
+
+  // g_camera.setColor(glm::vec3(0.0, 0.0, 3.0));
+  // g_camera.setNear(0.1);
+  // g_camera.setFar(80.1);
 }
 
 void init() {
@@ -410,11 +563,23 @@ void clear() {
 void render() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Erase the color and z buffers.
 
+  //Camera informations
+  float half_height = tan(glm::radians(g_camera.getFov())/2.0f);
+  float half_width = half_height*g_camera.getAspectRatio();
+
+
+  glUniform3fv(glGetUniformLocation(g_program, "camera_position"), 1, glm::value_ptr(g_camera.getPosition()));
+  glUniform3fv(glGetUniformLocation(g_program, "forward"), 1, glm::value_ptr(g_camera.getForward()));
+  glUniform3fv(glGetUniformLocation(g_program, "up"), 1, glm::value_ptr(g_camera.getUp()));
+  glUniform3fv(glGetUniformLocation(g_program, "right"), 1, glm::value_ptr(g_camera.getRight()));
+  glUniform1f(glGetUniformLocation(g_program, "half_height"), half_height);
+  glUniform1f(glGetUniformLocation(g_program, "half_width"), half_width);
+
   // const glm::mat4 viewMatrix = g_camera.computeViewMatrix();
   // const glm::mat4 projMatrix = g_camera.computeProjectionMatrix();
 
-  glActiveTexture(GL_TEXTURE0); // activate texture unit 0
-  glBindTexture(GL_TEXTURE_2D, g_earthTexID);
+  //glActiveTexture(GL_TEXTURE0); // activate texture unit 0
+  //glBindTexture(GL_TEXTURE_2D, g_earthTexID);
 
   // glUniformMatrix4fv(glGetUniformLocation(g_program, "viewMat"), 1, GL_FALSE, glm::value_ptr(viewMatrix)); // compute the view matrix of the camera and pass it to the GPU program
   // glUniformMatrix4fv(glGetUniformLocation(g_program, "projMat"), 1, GL_FALSE, glm::value_ptr(projMatrix)); // compute the projection matrix of the camera and pass it to the GPU program
