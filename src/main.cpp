@@ -567,7 +567,10 @@ void render() {
   float half_height = tan(glm::radians(g_camera.getFov())/2.0f);
   float half_width = half_height*g_camera.getAspectRatio();
 
+  //scene
+  glUniform1i(glGetUniformLocation(g_program, "n_triangles"), scene.triangleIndices.size());
 
+  //camera
   glUniform3fv(glGetUniformLocation(g_program, "camera_position"), 1, glm::value_ptr(g_camera.getPosition()));
   glUniform3fv(glGetUniformLocation(g_program, "forward"), 1, glm::value_ptr(g_camera.getForward()));
   glUniform3fv(glGetUniformLocation(g_program, "up"), 1, glm::value_ptr(g_camera.getUp()));
@@ -596,6 +599,8 @@ void update(const float currentTimeInSec) {
 
 int main(int argc, char ** argv) {
   init(); // Your initialization code (user interface, OpenGL states, scene with geometry, material, lights, etc)
+
+  printf("number of triangles : %ld\n", scene.triangleIndices.size());
   while(!glfwWindowShouldClose(g_window)) {
     update(static_cast<float>(glfwGetTime()));
     render();

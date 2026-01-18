@@ -28,8 +28,54 @@ layout(std430, binding = 2) buffer sceneData {
     vec3[] data;
 };
 
+uniform int n_triangles;
+
 //camera information
 uniform vec3 camera_position;
+
+const float epsilon = 0.01f;
+
+bool float_is_null(float x){
+	return x>-epsilon && x<epsilon;
+}
+
+
+bool ray_intersects_triangle(vec3 ray_origin, vec3 ray_direction, vec3 v1, vec3 v2, vec3 v3, out float distance){
+	vec3 edge1 = v2 - v1;
+    vec3 edge2 = v3 - v1;
+    vec3 ray_cross_edge2 = cross(ray_direction, edge2);
+	float det = dot(ray_cross_edge2, edge1); 
+
+	if(float_is_null(det)){
+		//triangle parallel to the ray
+		return false;
+	}
+
+	float inv_det = 1.0f/det;
+	vec3 v1_to_origin = ray_origin - v1;
+
+	float u = inv_det * dot(v1_to_origin, ray_cross_edge2);
+	if(u<0.0f || u>1.0f){
+		//intersection point not in the triangle
+		return false;
+	}
+
+	vec3 v1_to_origin_cross_edge1 = cross(v1_to_origin, edge1);
+	float v = inv_det * dot(ray_direction, v1_to_origin_cross_edge1);
+	if(v<0.0f || u+v >1.0f){
+		return false;
+	}
+
+	//the ray intersects the triangle, we compute the distace
+	distance = inv_det * dot(edge2, v1_to_origin_cross_edge1);
+	if(distance<epsilon){
+		//behind the screen. 
+		//TODO far and near with dot product with forward
+		return false; 
+	}
+
+	return true;
+}
 
 
 void main() {
@@ -43,5 +89,17 @@ void main() {
 
 	vec3 ray_direction = normalize(non_normalized_ray_direction);
 	color = vec4(ray_direction, 1.0);
+	color = vec4(1.0, 0.0, 0.0, 1.0);
 
+	vec3 v1, v2, v3;
+	float distance;
+	for(int i=0; i<n_triangles; i++){
+		v1 = vertexPositions[triangleIndices[i][0]];
+		v2 = vertexPositions[triangleIndices[i][1]];
+		v3 = vertexPositions[triangleIndices[i][2]];
+
+		if(ray_intersects_triangle(camera_position, ray_direction, v1, v2, v3, distance)){
+			color = vec4(0.0, 0.0, 1.0, 1.0);
+		}
+	}
 }
