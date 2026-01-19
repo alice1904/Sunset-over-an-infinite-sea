@@ -537,7 +537,7 @@ void initGPUstorageBuffer(){
             bufferData.data(), GL_DYNAMIC_READ);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, g_vertexSbo);
 
-  
+
   getDataFromVec3Vector(scene.vertexNormals, bufferData);
   bufferSize = sizeof(float)*bufferData.size();
   glCreateBuffers(1, &g_vertexNormalsSbo);
@@ -636,7 +636,6 @@ void render() {
 
 // Update any accessible variable based on the current time
 void update(const float delta) {
-
   //CAMERA
   
 
@@ -680,7 +679,7 @@ int main(int argc, char ** argv) {
   float lastCurrentTime=static_cast<float>(glfwGetTime());
   while(!glfwWindowShouldClose(g_window)) {
     currentTime = static_cast<float>(glfwGetTime());
-    update(lastCurrentTime-currentTime);
+    update(currentTime-lastCurrentTime);
     lastCurrentTime = currentTime;
     render();
     glfwSwapBuffers(g_window);

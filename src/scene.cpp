@@ -10,7 +10,9 @@ void Scene::init(){
 
         glm::vec3(0.5f, 0.5f, 0.f),
         glm::vec3(-1.f, 1.f, 0.f),
-        glm::vec3(-1.f, 0.f, 1.f)
+        glm::vec3(-1.f, 0.f, 1.f),
+
+        glm::vec3(1.f, 1.f, 0.f)
 
     };
 
@@ -25,12 +27,15 @@ void Scene::init(){
         glm::vec3(0.f, 0.f, 1.f),
         normal,
         normal,
-        normal
+        normal,
+        glm::vec3(0.f, 0.f, 1.f),
+
     };
 
     triangleIndices = {
         glm::uvec3(0, 1, 2),
-        glm::uvec3(3, 4, 5)
+        glm::uvec3(3, 4, 5),
+        glm::uvec3(0, 1, 6)
 
     };
 }

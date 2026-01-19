@@ -79,11 +79,11 @@ bool ray_intersects_triangle(vec3 ray_origin, vec3 ray_direction, vec3 v1, vec3 
 	return true;
 }
 
-bool find_closest_intersected_triangle(out int triangleIndice, vec3 ray_direction){
+bool find_closest_intersected_triangle(out int triangleIndice, out float best_distance, vec3 ray_direction){
 	//return true if one triangle is intersected.
 	//give the indices of the closest triangle.
 	bool triangle_found = false;
-	float best_distance;
+	
 
 	vec3 v1, v2, v3;
 	float distance;
@@ -118,27 +118,16 @@ void main() {
 	color = vec4(ray_direction, 1.0);
 	color = vec4(1.0, 0.0, 0.0, 1.0);
 
-	//vec3 v1, v2, v3;
-	//float distance;
-	//for(int i=0; i<n_triangles; i++){
-	//	for(int j=0; j<1000; j++){
-	//		v1 = vertexPositions[triangleIndices[i][0]];
-	//		v2 = vertexPositions[triangleIndices[i][1]];
-	//		v3 = vertexPositions[triangleIndices[i][2]];
-	//
-	//		if(ray_intersects_triangle(camera_position, ray_direction, v1, v2, v3, distance)){
-	//			color = vec4(0.0, 0.0, 1.0, 1.0);
-	//		}
-	//	}
-	//}
 
 	int triangleIndice;
-	if(find_closest_intersected_triangle(triangleIndice, ray_direction)){
-		if(triangleIndice==0){
+	float distance;
+	if(find_closest_intersected_triangle(triangleIndice, distance, ray_direction)){
+		if(triangleIndice==1){
 			color = vec4(0.0, 0.0, 1.0, 1.0);
 		}
 		else{
 			color = vec4(0.0, 1.0, 0.0, 1.0);
 		}
+
 	}
 }
