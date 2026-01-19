@@ -60,6 +60,7 @@ GLuint g_earthTexID;
 
 //storage buffer (this will store the scene data)
 GLuint g_vertexSbo = 0; //storage buffer object
+GLuint g_vertexNormalsSbo = 0;
 GLuint g_triangleSbo = 0;
 
 // All vertex Colors packed in one array [x0, y0, z0, x1, y1, z1, ...]
@@ -536,6 +537,19 @@ void initGPUstorageBuffer(){
             bufferData.data(), GL_DYNAMIC_READ);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, g_vertexSbo);
 
+  
+  getDataFromVec3Vector(scene.vertexNormals, bufferData);
+  bufferSize = sizeof(float)*bufferData.size();
+  glCreateBuffers(1, &g_vertexNormalsSbo);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_vertexNormalsSbo);
+  // glBufferStorage(
+  //           GL_SHADER_STORAGE_BUFFER, bufferSize, 
+  //           scene.vertexPositions.data(), GL_DYNAMIC_STORAGE_BIT);
+  glBufferData(
+            GL_SHADER_STORAGE_BUFFER, bufferSize, 
+            bufferData.data(), GL_DYNAMIC_READ);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, g_vertexNormalsSbo);
+
 
   getDataFromUvec3Vector(scene.triangleIndices, uintBufferData);
   bufferSize = sizeof(uint)*uintBufferData.size();
@@ -547,7 +561,7 @@ void initGPUstorageBuffer(){
   glBufferData(
             GL_SHADER_STORAGE_BUFFER, bufferSize, 
             uintBufferData.data(), GL_DYNAMIC_READ);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, g_triangleSbo);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, g_triangleSbo);
 }
 
 void initGPU(){
