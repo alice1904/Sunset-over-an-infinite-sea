@@ -119,6 +119,7 @@ vec3 getFragmentColor(int triangleIndice){
 
 
 
+
 void main() {
 	vec3 ray_direction = normalize(non_normalized_ray_direction);
 	vec3 lightDirection = normalize(vec3(1.0, 1.0, 1.0));
@@ -162,16 +163,13 @@ void main() {
 			
 
 			//light
+			float shininess=2.0;
+			vec3 lightColor = normalize(vec3(1.0, 1.0, 1.0));
+			vec3 reflection = 2*(dot(lightDirection, normal))*normal - lightDirection;
 			vec3 vue = -ray_direction;
 			
-			vec3 l = lightDirection;
-			vec3 r = 2*(dot(l, normal))*normal - l;
-			vec3 lightColor = normalize(vec3(1.0, 1.0, 1.0));
-			float shininess = 2;
-
-
-			vec3 diffuse  = diffuseRatio  * fragmentColor * max(dot(normal, l), 0)*lightColor;
-			vec3 specular = specularRatio * pow(max(dot(vue, r), 0), shininess)*lightColor;
+			vec3 diffuse  = diffuseRatio  * fragmentColor * max(dot(normal, lightDirection), 0)*lightColor;
+			vec3 specular = specularRatio * pow(max(dot(vue, reflection), 0), shininess)*lightColor;
 
 			color = vec4(ambient + diffuse + specular, 1.0);
 		}
@@ -183,10 +181,12 @@ void main() {
 	}
 	else{
 		//background
-		color = vec4(0.0, 0.5, 1.0, 1.0);
 		float sun_closeness = dot(ray_direction, normalize(vec3(1.0, 1.0, 1.0)));
 		if(sun_closeness>0.99){
 			color = vec4(1.0, 1.0, 0.5, 1.0);
+		}
+		else{
+			color = vec4(0.0, 0.5, 1.0, 1.0);
 		}
 
 	}
