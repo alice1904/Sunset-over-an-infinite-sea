@@ -41,10 +41,6 @@ bool float_is_null(float x){
 	return x>-epsilon && x<epsilon;
 }
 
-bool floats_are_close(float x, float a, float threshold){
-	float temp = x-a;
-	return temp>-threshold && temp<threshold;
-}
 
 
 bool ray_intersects_triangle(vec3 ray_origin, vec3 ray_direction, vec3 v1, vec3 v2, vec3 v3, out float distance, out float u, out float v){
@@ -84,7 +80,7 @@ bool ray_intersects_triangle(vec3 ray_origin, vec3 ray_direction, vec3 v1, vec3 
 	return true;
 }
 
-bool find_closest_intersected_triangle(vec3 ray_direction, out int triangleIndice, out float best_distance, out float best_u, out float best_v){
+bool find_closest_intersected_triangle(vec3 ray_origin, vec3 ray_direction, out int triangleIndice, out float best_distance, out float best_u, out float best_v){
 	//return true if one triangle is intersected.
 	//give the indices of the closest triangle.
 	bool triangle_found = false;
@@ -99,7 +95,7 @@ bool find_closest_intersected_triangle(vec3 ray_direction, out int triangleIndic
 		v2 = vertexPositions[triangleIndices[i][1]];
 		v3 = vertexPositions[triangleIndices[i][2]];
 
-		if(ray_intersects_triangle(camera_position, ray_direction, v1, v2, v3, distance, u, v)){
+		if(ray_intersects_triangle(ray_origin, ray_direction, v1, v2, v3, distance, u, v)){
 			if(!triangle_found || distance < best_distance){
 				triangle_found = true;
 				best_distance = distance;
@@ -114,23 +110,16 @@ bool find_closest_intersected_triangle(vec3 ray_direction, out int triangleIndic
 
 
 void main() {
-	//vec3 texColor = texture(material.albedoTex, fPosition.xy).rgb;
-	//color = vec4(texColor, 1.);
-	if(triangleIndices[1][0]==3){
-		color = vec4(1.0, 1.0, 0.0, 1.0);
-	}
-
-	color = vec4(fColor, 1.0);
-
 	vec3 ray_direction = normalize(non_normalized_ray_direction);
-	color = vec4(ray_direction, 1.0);
+	vec3 lightDirection = normalize(vec3(1.0, 1.0, 1.0));
 
 	
 
 	int triangleIndice;
 	float distance;
 	float u, v; //barycentrix coordinate
-	if(find_closest_intersected_triangle(ray_direction, triangleIndice, distance, u, v)){
+	if(find_closest_intersected_triangle(camera_position, ray_direction, triangleIndice, distance, u, v)){
+
 		vec3 fragmentColor;
 		if(triangleIndice==1){
 			fragmentColor = vec3(0.0, 1.0, 0.0);
@@ -139,38 +128,60 @@ void main() {
 			fragmentColor = vec3(1.0, 0.0, 0.0);
 		}
 
+
+		vec3 position = camera_position + distance*ray_direction;
 		vec3 normal = (1-u-v)*vertexNormals[triangleIndices[triangleIndice].x]
 				+u*vertexNormals[triangleIndices[triangleIndice].y]
 				+v*vertexNormals[triangleIndices[triangleIndice].z];
 		normal = normalize(normal);
-		vec3 position = camera_position + distance*ray_direction;
-
-		//light
-		vec3 v = -ray_direction;
-		if(dot(v, normal)<0){
-			normal = -normal; //we are looking at the other side of the triangle.
+		if(dot(ray_direction, normal)>0){
+				normal = -normal; //we are looking at the other side of the triangle.
 		}
-		vec3 l = vec3(1.0, 1.0, 1.0);
-		vec3 r = 2*(dot(l, normal))*normal - l;
-		vec3 lightColor = normalize(vec3(1.0, 1.0, 1.0));
-		float shininess = 2;
 
 		float ambientRatio = 0.33;
 		float diffuseRatio = 0.33;
 		float specularRatio = 1 - ambientRatio - diffuseRatio;
 
-		vec3 ambient  = ambientRatio  * fragmentColor;
-		vec3 diffuse  = diffuseRatio  * fragmentColor * max(dot(normal, l), 0)*lightColor;
-		vec3 specular = specularRatio * pow(max(dot(v, r), 0), shininess)*lightColor;
 
-		color = vec4(ambient + diffuse + specular, 1.0);
+		//shadow
+		int _triangleIndice;
+		float _distance;
+		float _u;
+		float _v;
+		if(dot(normal, lightDirection)<0 || find_closest_intersected_triangle(position, lightDirection, _triangleIndice, _distance, _u, _v)){
+			color = vec4(ambientRatio * fragmentColor, 1.0);
+		}
+		else{
+			
+
+			//light
+			vec3 vue = -ray_direction;
+			
+			vec3 l = lightDirection;
+			vec3 r = 2*(dot(l, normal))*normal - l;
+			vec3 lightColor = normalize(vec3(1.0, 1.0, 1.0));
+			float shininess = 2;
+
+
+			vec3 ambient  = ambientRatio  * fragmentColor;
+			vec3 diffuse  = diffuseRatio  * fragmentColor * max(dot(normal, l), 0)*lightColor;
+			vec3 specular = specularRatio * pow(max(dot(vue, r), 0), shininess)*lightColor;
+
+			color = vec4(ambient + diffuse + specular, 1.0);
+		}
+
+		
+
+		
 
 	}
 	else{
 		//background
-		color = vec4(0.0, 0.0, 1.0, 1.0);
-		if(dot(ray_direction, normalize(vec3(1.0, 1.0, 1.0)))>0.99){
+		color = vec4(0.0, 0.5, 1.0, 1.0);
+		float sun_closeness = dot(ray_direction, normalize(vec3(1.0, 1.0, 1.0)));
+		if(sun_closeness>0.99){
 			color = vec4(1.0, 1.0, 0.5, 1.0);
 		}
+
 	}
 }
