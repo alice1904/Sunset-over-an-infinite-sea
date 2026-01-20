@@ -108,6 +108,16 @@ bool find_closest_intersected_triangle(vec3 ray_origin, vec3 ray_direction, out 
 	return triangle_found;
 }
 
+vec3 getFragmentColor(int triangleIndice){
+	if(triangleIndice==1){
+		return vec3(0.0, 1.0, 0.0);
+	}
+	else{
+		return vec3(1.0, 0.0, 0.0);
+	}
+}
+
+
 
 void main() {
 	vec3 ray_direction = normalize(non_normalized_ray_direction);
@@ -120,15 +130,15 @@ void main() {
 	float u, v; //barycentrix coordinate
 	if(find_closest_intersected_triangle(camera_position, ray_direction, triangleIndice, distance, u, v)){
 
-		vec3 fragmentColor;
-		if(triangleIndice==1){
-			fragmentColor = vec3(0.0, 1.0, 0.0);
-		}
-		else{
-			fragmentColor = vec3(1.0, 0.0, 0.0);
-		}
+		//color
+		vec3 fragmentColor = getFragmentColor(triangleIndice);
+		float ambientRatio = 0.33;
+		float diffuseRatio = 0.33;
+		float specularRatio = 1 - ambientRatio - diffuseRatio;
+		vec3 ambient  = ambientRatio  * fragmentColor;
+		
 
-
+		//position and normal
 		vec3 position = camera_position + distance*ray_direction;
 		vec3 normal = (1-u-v)*vertexNormals[triangleIndices[triangleIndice].x]
 				+u*vertexNormals[triangleIndices[triangleIndice].y]
@@ -138,9 +148,6 @@ void main() {
 				normal = -normal; //we are looking at the other side of the triangle.
 		}
 
-		float ambientRatio = 0.33;
-		float diffuseRatio = 0.33;
-		float specularRatio = 1 - ambientRatio - diffuseRatio;
 
 
 		//shadow
@@ -149,7 +156,7 @@ void main() {
 		float _u;
 		float _v;
 		if(dot(normal, lightDirection)<0 || find_closest_intersected_triangle(position, lightDirection, _triangleIndice, _distance, _u, _v)){
-			color = vec4(ambientRatio * fragmentColor, 1.0);
+			color = vec4(ambient, 1.0);
 		}
 		else{
 			
@@ -163,7 +170,6 @@ void main() {
 			float shininess = 2;
 
 
-			vec3 ambient  = ambientRatio  * fragmentColor;
 			vec3 diffuse  = diffuseRatio  * fragmentColor * max(dot(normal, l), 0)*lightColor;
 			vec3 specular = specularRatio * pow(max(dot(vue, r), 0), shininess)*lightColor;
 
