@@ -28,6 +28,10 @@ layout(std430, binding = 2) buffer scenetriangleIndices {
     uvec3[] triangleIndices;
 };
 
+layout(std430, binding = 3) buffer sceneViewMatrices {
+    mat4[] viewMatrices;
+};
+
 
 
 uniform int n_triangles;
@@ -186,7 +190,7 @@ void main() {
 			color = vec4(1.0, 1.0, 0.5, 1.0);
 		}
 		else{
-			color = vec4(0.0, 0.5, 1.0, 1.0);
+			color = viewMatrices[1]*vec4(0.0, 0.5, 1.0, 1.0);
 		}
 
 	}

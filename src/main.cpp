@@ -62,6 +62,7 @@ GLuint g_earthTexID;
 GLuint g_vertexSbo = 0; //storage buffer object
 GLuint g_vertexNormalsSbo = 0;
 GLuint g_triangleSbo = 0;
+GLuint g_viewMatricesSbo = 0;
 
 // All vertex Colors packed in one array [x0, y0, z0, x1, y1, z1, ...]
 std::vector<float> g_vertexPositions;
@@ -562,6 +563,27 @@ void initGPUstorageBuffer(){
             GL_SHADER_STORAGE_BUFFER, bufferSize, 
             uintBufferData.data(), GL_DYNAMIC_READ);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, g_triangleSbo);
+
+  glm::mat4 matrix0 = transpose(glm::mat4(
+            1.0f, 0.0f, 0.0f, 0.0f, 
+            0.0f, 1.0f, 0.0f, 0.0f, 
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f));
+  glm::mat4 matrix1 = transpose(glm::mat4(
+            1.0f, 0.0f, 0.0f, 0.0f, 
+            0.0f, 1.0f, 0.0f, 0.0f, 
+            0.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f));
+  std::vector<glm::mat4> viewMatrices = {matrix0, matrix1};
+  bufferSize = sizeof(glm::mat4)*viewMatrices.size();
+  glCreateBuffers(1, &g_viewMatricesSbo);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_viewMatricesSbo);
+  glBufferData(
+            GL_SHADER_STORAGE_BUFFER, bufferSize, 
+            viewMatrices.data(), GL_DYNAMIC_READ);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, g_viewMatricesSbo);
+
+
 }
 
 void initGPU(){
