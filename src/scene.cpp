@@ -1,5 +1,8 @@
 #include "scene.h"
 
+
+
+
 void Scene::init(){
 
     printf("init scene\n");
@@ -33,9 +36,16 @@ void Scene::init(){
     };
 
     triangleIndices = {
-        glm::uvec3(0, 1, 2),
         glm::uvec3(3, 4, 5),
+        glm::uvec3(0, 1, 2),
         glm::uvec3(0, 1, 6)
 
+    };
+
+    objectProperties = {
+        {glm::vec3(0.0, 1.0, 0.0),
+        1, 0.0, 0.0, 0.0, 0.0},
+        {glm::vec3(1.0, 0.0, 1.0),
+        3, 0.0, 0.0, 0.0, 0.0}
     };
 }

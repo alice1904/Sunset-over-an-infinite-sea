@@ -564,23 +564,32 @@ void initGPUstorageBuffer(){
             uintBufferData.data(), GL_DYNAMIC_READ);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, g_triangleSbo);
 
-  glm::mat4 matrix0 = transpose(glm::mat4(
-            1.0f, 0.0f, 0.0f, 0.0f, 
-            0.0f, 1.0f, 0.0f, 0.0f, 
-            0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f));
-  glm::mat4 matrix1 = transpose(glm::mat4(
-            1.0f, 0.0f, 0.0f, 0.0f, 
-            0.0f, 1.0f, 0.0f, 0.0f, 
-            0.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f));
-  std::vector<glm::mat4> viewMatrices = {matrix0, matrix1};
-  bufferSize = sizeof(glm::mat4)*viewMatrices.size();
+  // glm::mat4 matrix0 = transpose(glm::mat4(
+  //           1.0f, 0.0f, 0.0f, 0.0f, 
+  //           0.0f, 1.0f, 0.0f, 0.0f, 
+  //           0.0f, 0.0f, 1.0f, 0.0f,
+  //           0.0f, 0.0f, 0.0f, 1.0f));
+  // glm::mat4 matrix1 = transpose(glm::mat4(
+  //           1.0f, 0.0f, 0.0f, 0.0f, 
+  //           0.0f, 1.0f, 0.0f, 0.0f, 
+  //           0.0f, 0.0f, 0.0f, 0.0f,
+  //           0.0f, 0.0f, 0.0f, 1.0f));
+  // std::vector<glm::mat4> viewMatrices = {matrix0, matrix1};
+  // bufferSize = sizeof(glm::mat4)*viewMatrices.size();
+  // glCreateBuffers(1, &g_viewMatricesSbo);
+  // glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_viewMatricesSbo);
+  // glBufferData(
+  //           GL_SHADER_STORAGE_BUFFER, bufferSize, 
+  //           viewMatrices.data(), GL_DYNAMIC_READ);
+  // glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, g_viewMatricesSbo);
+
+  
+  bufferSize = sizeof(ObjectProperties)*scene.objectProperties.size();
   glCreateBuffers(1, &g_viewMatricesSbo);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_viewMatricesSbo);
   glBufferData(
             GL_SHADER_STORAGE_BUFFER, bufferSize, 
-            viewMatrices.data(), GL_DYNAMIC_READ);
+            scene.objectProperties.data(), GL_DYNAMIC_READ);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, g_viewMatricesSbo);
 
 
@@ -634,6 +643,7 @@ void render() {
 
   //scene
   glUniform1i(glGetUniformLocation(g_program, "n_triangles"), scene.triangleIndices.size());
+  glUniform1i(glGetUniformLocation(g_program, "n_objects"), scene.objectProperties.size());
 
   //camera
   glUniform3fv(glGetUniformLocation(g_program, "camera_position"), 1, glm::value_ptr(g_camera.getPosition()));

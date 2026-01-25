@@ -17,3 +17,9 @@ $$ rayDirection = forward + x*halfWidth*right + y*halfHeight*up $$
 where $$halfHeight = tan(Fov/2)$$ $$halfWidth = aspectRation*halfHeight$$
 
 The direction is then interpolated for each fragment.
+
+## Object Properties
+
+To differentiate the objects, I simply passed another storage buffer called objectProperties which stored both the objects' properties (color, reflection/refraction ratio, diffuse/specular ratio) and the index of the last triangle. The challenge was to put all this information in a struct where the color would be well aligned (see Storage Buffer part above). Fortunately, I had 4 floats (4 bytes in glsl), 1 int (4 bytes in glsl) and 1 vec3 (3 * 4 bytes) which makes exactly 8 * 4 bytes (remember : vec3 has to be aligned on 4 * 4 bytes). To be sure the int will take 4 bytes in the C struct, I used the type int32_t from the stdint.h library.
+
+Then each time I find the closest triangle intersected by a ray, I have to browse the list of objects to determine from which object it is, but it is not a big problem because I only have a couple of objects.

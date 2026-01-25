@@ -8,6 +8,9 @@
 //};
 //uniform Material material;
 
+
+
+
 in vec3 fPosition;
 in vec3 fColor;
 
@@ -15,6 +18,18 @@ in vec3 fColor;
 in vec3 non_normalized_ray_direction;
 
 out vec4 color;	  // Shader output: the color response attached to this fragment
+
+
+struct ObjectProperties {
+    //alignement set to 4 float for the vec3 in glsl
+    vec3 color;
+    int endIndex; //4 bytes like float
+
+    float diffuseRatio;
+    float specularRatio;
+    float reflectionRatio;
+    float refractionRatio;
+};
 
 layout(std430, binding = 0) buffer sceneVertexPositions {
     vec3[] vertexPositions;
@@ -28,13 +43,14 @@ layout(std430, binding = 2) buffer scenetriangleIndices {
     uvec3[] triangleIndices;
 };
 
-layout(std430, binding = 3) buffer sceneViewMatrices {
-    mat4[] viewMatrices;
+layout(std430, binding = 3) buffer sceneObjectProperties {
+    ObjectProperties[] objectProperties;
 };
 
 
 
 uniform int n_triangles;
+uniform int n_objects;
 
 //camera information
 uniform vec3 camera_position;
@@ -45,6 +61,24 @@ bool float_is_null(float x){
 	return x>-epsilon && x<epsilon;
 }
 
+
+int findObjectIndex(int triangleIndex){
+	int objectIndex = 0;
+	while(objectIndex<n_objects){
+		if(triangleIndex < objectProperties[objectIndex].endIndex){
+			return objectIndex;
+		}
+		objectIndex++;
+	}
+	// we have an error because the triangle index is above the last object endIndex
+	// let's return 0 and hope the user will look at this comment
+	// when he will have the wrong color on its object.
+	// (It's very frustrating not being able to raise exceptions
+	// or send logs. I don't know whether it is possible or not in opengl.
+	// I think it is possible in vulkan, but obviously I don't have the courage to 
+	// face vulkan for this project)
+	return 0;
+}
 
 
 bool ray_intersects_triangle(vec3 ray_origin, vec3 ray_direction, vec3 v1, vec3 v2, vec3 v3, out float distance, out float u, out float v){
@@ -112,14 +146,14 @@ bool find_closest_intersected_triangle(vec3 ray_origin, vec3 ray_direction, out 
 	return triangle_found;
 }
 
-vec3 getFragmentColor(int triangleIndice){
-	if(triangleIndice==1){
-		return vec3(0.0, 1.0, 0.0);
-	}
-	else{
-		return vec3(1.0, 0.0, 0.0);
-	}
-}
+// vec3 getFragmentColor(int triangleIndice){
+// 	if(triangleIndice==0){
+// 		return vec3(0.0, 1.0, 0.0);
+// 	}
+// 	else{
+// 		return vec3(1.0, 0.0, 0.0);
+// 	}
+// }
 
 
 
@@ -136,7 +170,8 @@ void main() {
 	if(find_closest_intersected_triangle(camera_position, ray_direction, triangleIndice, distance, u, v)){
 
 		//color
-		vec3 fragmentColor = getFragmentColor(triangleIndice);
+		int objectIndex = findObjectIndex(triangleIndice);
+		vec3 fragmentColor = objectProperties[objectIndex].color;
 		float ambientRatio = 0.33;
 		float diffuseRatio = 0.33;
 		float specularRatio = 1 - ambientRatio - diffuseRatio;
@@ -190,7 +225,9 @@ void main() {
 			color = vec4(1.0, 1.0, 0.5, 1.0);
 		}
 		else{
-			color = viewMatrices[1]*vec4(0.0, 0.5, 1.0, 1.0);
+			color = vec4(0.0, 0.5, 1.0, 1.0);
+			// vec3 c = objectProperties[1].color;
+			// color = vec4(c, 1.0);
 		}
 
 	}
