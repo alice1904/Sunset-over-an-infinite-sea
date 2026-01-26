@@ -156,14 +156,14 @@ bool find_closest_intersected_triangle(vec3 ray_origin, vec3 ray_direction, out 
 // 	}
 // }
 
-vec3 getRayColor(vec3 camera_position, vec3 ray_direction){
+vec3 getRayColor(vec3 ray_origin, vec3 ray_direction){
 
 	vec3 rayColor;
 
 	int triangleIndice;
 	float distance;
 	float u, v; //barycentrix coordinate
-	if(find_closest_intersected_triangle(camera_position, ray_direction, triangleIndice, distance, u, v)){
+	if(find_closest_intersected_triangle(ray_origin, ray_direction, triangleIndice, distance, u, v)){
 
 		//color
 		int objectIndex = findObjectIndex(triangleIndice);
@@ -175,7 +175,7 @@ vec3 getRayColor(vec3 camera_position, vec3 ray_direction){
 		
 
 		//position and normal
-		vec3 position = camera_position + distance*ray_direction;
+		vec3 position = ray_origin + distance*ray_direction;
 		// vec3 normal = (1-u-v)*vertexNormals[triangleIndices[triangleIndice].x]
 		// 		+u*vertexNormals[triangleIndices[triangleIndice].y]
 		// 		+v*vertexNormals[triangleIndices[triangleIndice].z];
