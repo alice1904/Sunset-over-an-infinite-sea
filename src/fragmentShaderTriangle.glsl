@@ -156,7 +156,7 @@ bool find_closest_intersected_triangle(vec3 ray_origin, vec3 ray_direction, out 
 // 	}
 // }
 
-vec3 getRayColor(vec3 ray_origin, vec3 ray_direction){
+vec3 getRayColor(vec3 ray_origin, vec3 ray_direction, int nRayShotsLeft){
 
 	vec3 rayColor;
 
@@ -189,28 +189,30 @@ vec3 getRayColor(vec3 ray_origin, vec3 ray_direction){
 
 
 
+		
+		
+			
+
+		//light
+		float shininess=2.0;
+		vec3 lightColor = normalize(vec3(1.0, 1.0, 1.0));
+		vec3 reflection = 2*(dot(lightDirection, normal))*normal - lightDirection;
+		vec3 vue = -ray_direction;
+		
+		vec3 diffuse  = diffuseRatio  * fragmentColor * max(dot(normal, lightDirection), 0)*lightColor;
+		vec3 specular = specularRatio * pow(max(dot(vue, reflection), 0), shininess)*lightColor;
+
+		rayColor = ambient + diffuse + specular;
+
 		//shadow
 		int _triangleIndice;
 		float _distance;
 		float _u;
 		float _v;
 		if(dot(normal, lightDirection)<0 || find_closest_intersected_triangle(position, lightDirection, _triangleIndice, _distance, _u, _v)){
-			rayColor = ambient;
+			rayColor = rayColor/2.0;
 		}
-		else{
-			
-
-			//light
-			float shininess=2.0;
-			vec3 lightColor = normalize(vec3(1.0, 1.0, 1.0));
-			vec3 reflection = 2*(dot(lightDirection, normal))*normal - lightDirection;
-			vec3 vue = -ray_direction;
-			
-			vec3 diffuse  = diffuseRatio  * fragmentColor * max(dot(normal, lightDirection), 0)*lightColor;
-			vec3 specular = specularRatio * pow(max(dot(vue, reflection), 0), shininess)*lightColor;
-
-			rayColor = ambient + diffuse + specular;
-		}
+		
 
 		
 
@@ -237,9 +239,6 @@ vec3 getRayColor(vec3 ray_origin, vec3 ray_direction){
 void main() {
 	vec3 ray_direction = normalize(non_normalized_ray_direction);
 
-	color = vec4(getRayColor(camera_position, ray_direction), 1.0);
+	color = vec4(getRayColor(camera_position, ray_direction, 1), 1.0);
 
-	
-
-	
 }
