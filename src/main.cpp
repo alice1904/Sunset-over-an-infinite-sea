@@ -644,6 +644,7 @@ void render() {
   //scene
   glUniform1i(glGetUniformLocation(g_program, "n_triangles"), scene.triangleIndices.size());
   glUniform1i(glGetUniformLocation(g_program, "n_objects"), scene.objectProperties.size());
+  glUniform3fv(glGetUniformLocation(g_program, "lightDirection"),1,  glm::value_ptr(glm::normalize(glm::vec3(1.0, 1.0, 1.0))));
 
   //camera
   glUniform3fv(glGetUniformLocation(g_program, "camera_position"), 1, glm::value_ptr(g_camera.getPosition()));

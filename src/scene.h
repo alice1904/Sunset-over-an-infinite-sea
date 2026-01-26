@@ -20,6 +20,8 @@ struct ObjectProperties_struct {
     float specularRatio;
     float reflectionRatio;
     float refractionRatio;
+
+    //eventually : shininess, refraction indice ?
 }; typedef struct ObjectProperties_struct ObjectProperties;
 
 class Scene {

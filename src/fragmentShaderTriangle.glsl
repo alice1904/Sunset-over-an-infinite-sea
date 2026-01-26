@@ -51,6 +51,7 @@ layout(std430, binding = 3) buffer sceneObjectProperties {
 
 uniform int n_triangles;
 uniform int n_objects;
+uniform vec3 lightDirection;
 
 //camera information
 uniform vec3 camera_position;
@@ -155,14 +156,9 @@ bool find_closest_intersected_triangle(vec3 ray_origin, vec3 ray_direction, out 
 // 	}
 // }
 
+vec3 getRayColor(vec3 camera_position, vec3 ray_direction){
 
-
-
-void main() {
-	vec3 ray_direction = normalize(non_normalized_ray_direction);
-	vec3 lightDirection = normalize(vec3(1.0, 1.0, 1.0));
-
-	
+	vec3 rayColor;
 
 	int triangleIndice;
 	float distance;
@@ -172,17 +168,20 @@ void main() {
 		//color
 		int objectIndex = findObjectIndex(triangleIndice);
 		vec3 fragmentColor = objectProperties[objectIndex].color;
-		float ambientRatio = 0.33;
-		float diffuseRatio = 0.33;
-		float specularRatio = 1 - ambientRatio - diffuseRatio;
+		float diffuseRatio = objectProperties[objectIndex].diffuseRatio;
+		float specularRatio = objectProperties[objectIndex].specularRatio;
+		float ambientRatio = 1 - specularRatio - diffuseRatio;
 		vec3 ambient  = ambientRatio  * fragmentColor;
 		
 
 		//position and normal
 		vec3 position = camera_position + distance*ray_direction;
-		vec3 normal = (1-u-v)*vertexNormals[triangleIndices[triangleIndice].x]
-				+u*vertexNormals[triangleIndices[triangleIndice].y]
-				+v*vertexNormals[triangleIndices[triangleIndice].z];
+		// vec3 normal = (1-u-v)*vertexNormals[triangleIndices[triangleIndice].x]
+		// 		+u*vertexNormals[triangleIndices[triangleIndice].y]
+		// 		+v*vertexNormals[triangleIndices[triangleIndice].z];
+		vec3 edge1 = vertexPositions[triangleIndices[triangleIndice].y] - vertexPositions[triangleIndices[triangleIndice].x];
+		vec3 edge2 = vertexPositions[triangleIndices[triangleIndice].z] - vertexPositions[triangleIndices[triangleIndice].x];
+		vec3 normal = cross(edge1, edge2);
 		normal = normalize(normal);
 		if(dot(ray_direction, normal)>0){
 				normal = -normal; //we are looking at the other side of the triangle.
@@ -196,7 +195,7 @@ void main() {
 		float _u;
 		float _v;
 		if(dot(normal, lightDirection)<0 || find_closest_intersected_triangle(position, lightDirection, _triangleIndice, _distance, _u, _v)){
-			color = vec4(ambient, 1.0);
+			rayColor = ambient;
 		}
 		else{
 			
@@ -210,7 +209,7 @@ void main() {
 			vec3 diffuse  = diffuseRatio  * fragmentColor * max(dot(normal, lightDirection), 0)*lightColor;
 			vec3 specular = specularRatio * pow(max(dot(vue, reflection), 0), shininess)*lightColor;
 
-			color = vec4(ambient + diffuse + specular, 1.0);
+			rayColor = ambient + diffuse + specular;
 		}
 
 		
@@ -222,13 +221,25 @@ void main() {
 		//background
 		float sun_closeness = dot(ray_direction, normalize(vec3(1.0, 1.0, 1.0)));
 		if(sun_closeness>0.99){
-			color = vec4(1.0, 1.0, 0.5, 1.0);
+			rayColor = vec3(1.0, 1.0, 0.5);
 		}
 		else{
-			color = vec4(0.0, 0.5, 1.0, 1.0);
+			rayColor = vec3(0.0, 0.5, 1.0);
 			// vec3 c = objectProperties[1].color;
 			// color = vec4(c, 1.0);
 		}
 
 	}
+	return rayColor;
+}
+
+
+void main() {
+	vec3 ray_direction = normalize(non_normalized_ray_direction);
+
+	color = vec4(getRayColor(camera_position, ray_direction), 1.0);
+
+	
+
+	
 }
