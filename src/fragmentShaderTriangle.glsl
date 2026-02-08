@@ -108,6 +108,11 @@ int getFatherIndex(int i){
 
 // RAY TRACING
 
+vec3 getBackgroundColor(vec3 rayDirection){
+	//return the color of the sky in this direction
+	return vec3(0.0, 0.0, 0.0);
+}
+
 
 int findObjectIndex(int triangleIndex){
 	int objectIndex = 0;
@@ -181,10 +186,8 @@ bool find_closest_intersected_triangle(vec3 ray_origin, vec3 ray_direction, out 
 	best_u = 0.0;
 	best_v = 0.0;
 
-
 	bool triangle_found = false;
 	
-
 	vec3 v1, v2, v3;
 	float dist;
 	float u, v;
@@ -209,7 +212,7 @@ bool find_closest_intersected_triangle(vec3 ray_origin, vec3 ray_direction, out 
 
 
 
-bool getRayInformationTree(vec3 ray_origin, vec3 ray_direction, int outputNodeIndex){
+bool getRayInformation(vec3 ray_origin, vec3 ray_direction, int outputNodeIndex){
 	//return true if a triangle was intersected and false if it went to infinite.
 	//Write the following information in the ray tree node:
 	//		- position of the intersection point
@@ -325,7 +328,7 @@ void computeRayTree(vec3 camera_position, vec3 initial_ray_direction){
 	//exceot final color
 	//and write it in the rayTree
 	initRayTree();
-	if(getRayInformationTree(camera_position, initial_ray_direction, 0)){
+	if(getRayInformation(camera_position, initial_ray_direction, 0)){
 		enableSonsComputation(0);
 	}
 
@@ -343,7 +346,7 @@ void computeRayTree(vec3 camera_position, vec3 initial_ray_direction){
 			else{
 				ray_direction = rayTree[fatherIndex].refractedRay;
 			}
-			if(getRayInformationTree(rayTree[fatherIndex].position, ray_direction, i)){
+			if(getRayInformation(rayTree[fatherIndex].position, ray_direction, i)){
 				//trangle intersected
 				//enable sons computation
 				enableSonsComputation(i);
