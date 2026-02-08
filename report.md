@@ -24,6 +24,10 @@ To differentiate the objects, I simply passed another storage buffer called obje
 
 Then each time I find the closest triangle intersected by a ray, I have to browse the list of objects to determine from which object it is, but it is not a big problem because I only have a couple of objects.
 
+## Recursion and trees
+
+Unfortunately, you cannot have recursive functions in glsl. I decided to implement a tree representing the cast rays. To do so I used an array of size 
+$2**(height + 1) - 1$. The nodes are stored in the array's cells. The sons'index of the node of index i are $2*i+1$ and $2*i+2$. For each node I stored a struct containing information about the ray. I first compute the direction and origin of each ray from root to leaves and then compute the final color from leaves to root. 
 
 # TODO 
 - probleme avec redefition sortie

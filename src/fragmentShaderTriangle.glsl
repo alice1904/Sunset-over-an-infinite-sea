@@ -104,14 +104,49 @@ int getFatherIndex(int i){
 
 
 
+// BACKGROUND
 
-
-// RAY TRACING
+vec3 getGradient(vec3 color0, vec3 color1, float x){
+	//x must be between 0 and 1
+	//return the interpolated color,
+	//x between the "distance" to color0
+	if(x<0.0 || x>1.0){
+		ERROR_OCCURED=true;
+	}
+	return (1-x)*color0 + x*color1;
+}
 
 vec3 getBackgroundColor(vec3 rayDirection){
 	//return the color of the sky in this direction
-	return vec3(0.0, 0.0, 0.0);
+	float sun_closeness = dot(rayDirection, normalize(lightDirection));
+	vec3 sunColor = vec3(1.0, 1.0, 0.5);
+	vec3 orange =vec3(1.0, 0.63, 0.2); //vec3(1.0, 0.49, 0.2); //vec3(1.0, 0.63, 0.26);
+	vec3 pink = vec3(1.0, 0.5, 0.5);
+	vec3 blue = vec3(0.0, 0.0, 0.26);//vec3(0.0, 0.5, 1.0);
+	float sunThreshold = 0.998;
+	float haloThreshold = 0.99;
+	float pinkSkyThreshold = 0.9;
+
+	if(sun_closeness>sunThreshold){
+		return sunColor;
+	}
+	else if(sun_closeness>haloThreshold){
+		float x = (sun_closeness-haloThreshold)/(sunThreshold-haloThreshold);
+		return getGradient(orange, sunColor, x);
+	}
+	else if(sun_closeness>pinkSkyThreshold){
+		float x = (sun_closeness - pinkSkyThreshold)/(haloThreshold - pinkSkyThreshold);
+		return getGradient(pink, orange, x);
+	}
+	else{
+		float x = (sun_closeness - -1)/(pinkSkyThreshold - -1);
+		return getGradient(blue, pink, x);
+	}
 }
+
+
+
+// RAY TRACING
 
 
 int findObjectIndex(int triangleIndex){
@@ -289,13 +324,7 @@ bool getRayInformation(vec3 ray_origin, vec3 ray_direction, int outputNodeIndex)
 		rayTree[outputNodeIndex].objectIndex = -1;
 
 		//background
-		float sun_closeness = dot(ray_direction, normalize(vec3(1.0, 1.0, 1.0)));
-		if(sun_closeness>0.99){
-			rayTree[outputNodeIndex].triangleColor = vec3(1.0, 1.0, 0.5);
-		}
-		else{
-			rayTree[outputNodeIndex].triangleColor = vec3(0.0, 0.5, 1.0);
-		}
+		rayTree[outputNodeIndex].triangleColor = getBackgroundColor(ray_direction);
 		return false;
 
 	}
