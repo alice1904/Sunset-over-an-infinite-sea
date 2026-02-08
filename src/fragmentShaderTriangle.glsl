@@ -1,15 +1,13 @@
 #version 430
 //#version 330 core	     // Minimal GL version support expected from the GPU
 
+// PARAMETERS
 
-//struct Material {
-//
-//	sampler2D albedoTex;
-//};
-//uniform Material material;
+#define RECURSION_DEPTH 3
 
 
 
+// INPUTS
 
 in vec3 fPosition;
 in vec3 fColor;
@@ -56,11 +54,58 @@ uniform vec3 lightDirection;
 //camera information
 uniform vec3 camera_position;
 
-const float epsilon = 0.01f; //0.01f;
+
+
+// GENERAL USE FUNCTIONS AND VARIABLES
+
+const float epsilon = 0.001f; //0.01f;
 
 bool float_is_null(float x){
 	return x>-epsilon && x<epsilon;
 }
+
+bool ERROR_OCCURED = false;
+
+
+// RAY TREE REPRESENTATION
+
+struct rayInformation {
+	bool shouldBeComputed; //the father ray intersected a triangle
+	bool dataValid;	
+	vec3 position;
+	vec3 reflectedRay;
+	vec3 refractedRay;
+	vec3 triangleColor; //color of the object intersected without recursion
+	vec3 finalColor; //final color with recursion
+	int objectIndex;
+};
+
+const int rayTreeSize = int(pow(2, RECURSION_DEPTH+1))-1;
+rayInformation rayTree[rayTreeSize];
+
+int getLeftSonIndex(int i){
+	return 2*i+1;
+}
+
+int getRightSonIndex(int i){
+	return 2*i+2;
+}
+
+int getFatherIndex(int i){
+	if(i==0){
+		return 0;
+	}
+	if(i%2==0){
+		return (i-1)/2;
+	}
+	return i/2;
+}
+
+
+
+
+
+// RAY TRACING
 
 
 int findObjectIndex(int triangleIndex){
@@ -160,14 +205,97 @@ bool find_closest_intersected_triangle(vec3 ray_origin, vec3 ray_direction, out 
 	return triangle_found;
 }
 
-// vec3 getFragmentColor(int triangleIndice){
-// 	if(triangleIndice==0){
-// 		return vec3(0.0, 1.0, 0.0);
-// 	}
-// 	else{
-// 		return vec3(1.0, 0.0, 0.0);
-// 	}
-// }
+
+
+bool getRayInformationTree(vec3 ray_origin, vec3 ray_direction, int outputNodeIndex){
+	//return true if a triangle was intersected and false if it went to infinite.
+	//Write the following information in the ray tree node:
+	//		- position of the intersection point
+	//		- reflected ray
+	//		- refracted ray
+	//		- color : the color of the triangle at the point, or color of the background
+	//		- objectIndex : index of the object the triangle belongs to 
+
+
+	rayTree[outputNodeIndex].dataValid = true;
+
+	int triangleIndice;
+	float dist;
+	float u, v; //barycentrix coordinate
+	if(find_closest_intersected_triangle(ray_origin, ray_direction, triangleIndice, dist, u, v)){
+
+		//color
+		int objectIndex = findObjectIndex(triangleIndice);
+		rayTree[outputNodeIndex].objectIndex = objectIndex;
+		vec3 fragmentColor = objectProperties[objectIndex].color;
+		float diffuseRatio = objectProperties[objectIndex].diffuseRatio;
+		float specularRatio = objectProperties[objectIndex].specularRatio;
+		float ambientRatio = 1 - specularRatio - diffuseRatio;
+		vec3 ambient  = ambientRatio  * fragmentColor;
+		
+
+		//position and normal
+		vec3 position = ray_origin + dist*ray_direction;
+		rayTree[outputNodeIndex].position = position;
+		// vec3 normal = (1-u-v)*vertexNormals[triangleIndices[triangleIndice].x]
+		// 		+u*vertexNormals[triangleIndices[triangleIndice].y]
+		// 		+v*vertexNormals[triangleIndices[triangleIndice].z];
+		vec3 edge1 = vertexPositions[triangleIndices[triangleIndice].y] - vertexPositions[triangleIndices[triangleIndice].x];
+		vec3 edge2 = vertexPositions[triangleIndices[triangleIndice].z] - vertexPositions[triangleIndices[triangleIndice].x];
+		vec3 normal = cross(edge1, edge2);
+		normal = normalize(normal);
+		if(dot(ray_direction, normal)>0){
+				normal = -normal; //we are looking at the other side of the triangle.
+		}
+
+
+
+			//triangleColor
+		//light
+		float shininess=2.0;
+		vec3 lightColor = normalize(vec3(1.0, 1.0, 1.0));
+		vec3 reflection = normalize(2*(dot(lightDirection, normal))*normal - lightDirection);
+		vec3 vue = -ray_direction;
+		vec3 diffuse  = diffuseRatio  * fragmentColor * max(dot(normal, lightDirection), 0)*lightColor;
+		vec3 specular = specularRatio * pow(max(dot(vue, reflection), 0), shininess)*lightColor;
+		rayTree[outputNodeIndex].triangleColor = ambient + diffuse + specular;
+		//shadow
+		int _triangleIndice;
+		float _distance;
+		float _u;
+		float _v;
+		if(dot(normal, lightDirection)<0 || find_closest_intersected_triangle(position, lightDirection, _triangleIndice, _distance, _u, _v)){
+			rayTree[outputNodeIndex].triangleColor = rayTree[outputNodeIndex].triangleColor/2.0;
+		}
+
+			//rays out
+		rayTree[outputNodeIndex].reflectedRay = normalize(2*(dot(-ray_direction, normal))*normal + ray_direction);
+		rayTree[outputNodeIndex].refractedRay = ray_direction;
+
+		return true;
+
+	}
+	else{
+		//need to initialize out values to avoid
+		//strange errors
+		rayTree[outputNodeIndex].position = vec3(0.0, 0.0, 0.0);
+		rayTree[outputNodeIndex].reflectedRay = vec3(0.0, 0.0, 0.0);
+		rayTree[outputNodeIndex].refractedRay = vec3(0.0, 0.0, 0.0);
+		rayTree[outputNodeIndex].objectIndex = -1;
+
+		//background
+		float sun_closeness = dot(ray_direction, normalize(vec3(1.0, 1.0, 1.0)));
+		if(sun_closeness>0.99){
+			rayTree[outputNodeIndex].triangleColor = vec3(1.0, 1.0, 0.5);
+		}
+		else{
+			rayTree[outputNodeIndex].triangleColor = vec3(0.0, 0.5, 1.0);
+		}
+		return false;
+
+	}
+}
+
 
 bool getRayInformation(vec3 ray_origin, vec3 ray_direction, out vec3 position, out vec3 reflectedRay, out vec3 refractedRay, out vec3 triangleColor, out int objectIndex){
 	//return true if a triangle was intersected and false if it went to infinite.
@@ -179,7 +307,6 @@ bool getRayInformation(vec3 ray_origin, vec3 ray_direction, out vec3 position, o
 	//		- objectIndex : index of the object the triangle belongs to 
 
 
-	
 
 	int triangleIndice;
 	float dist;
@@ -278,68 +405,155 @@ vec3 getRayColorWithoutRecursion(vec3 ray_origin, vec3 ray_direction){
 	vec3 triangleColor;
 	int objectIndex;
 
-	bool b = getRayInformation(ray_origin, ray_direction, position, reflectedRay, 
+	getRayInformation(ray_origin, ray_direction, position, reflectedRay, 
 			refractedRay, triangleColor, objectIndex);
 
 	// if(b){
 	// 	return vec3(1.0, 0.0, 0.0);
 	// }
-
-	if(objectIndex==0){
-		return vec3(0.0, 1.0, 0.0);
-	}
-	else if(objectIndex==1){
-		return vec3(1.0, 0.0, 1.0);
-	}
-
 	return triangleColor;
-
 }
+
+void initRayTree(){
+	//set valid flag of each node to 0
+	for(int i=0; i<rayTreeSize; i++){
+		rayTree[i].dataValid = false;
+		rayTree[i].shouldBeComputed = false;
+	}
+}
+
+void enableSonsComputation(int i){
+	int refractedSon = getRightSonIndex(i);
+	if(refractedSon<rayTreeSize){
+		int reflectedSon = getLeftSonIndex(i);
+		rayTree[reflectedSon].shouldBeComputed=true;
+		rayTree[refractedSon].shouldBeComputed=true;
+	}
+}
+
+void computeRayTree(vec3 camera_position, vec3 initial_ray_direction){
+	//compute all the rays information
+	//exceot final color
+	//and write it in the rayTree
+	initRayTree();
+	if(getRayInformationTree(camera_position, initial_ray_direction, 0)){
+		enableSonsComputation(0);
+	}
+
+	for(int i=1; i<rayTreeSize; i++){
+		if(rayTree[i].shouldBeComputed){
+			int fatherIndex = getFatherIndex(i);
+			if(!rayTree[fatherIndex].dataValid){
+				ERROR_OCCURED=true;
+			}
+		
+			vec3 ray_direction;
+			if(i%2==1){
+				ray_direction = rayTree[fatherIndex].reflectedRay;
+			}
+			else{
+				ray_direction = rayTree[fatherIndex].refractedRay;
+			}
+			if(getRayInformationTree(rayTree[fatherIndex].position, ray_direction, i)){
+				//trangle intersected
+				//enable sons computation
+				enableSonsComputation(i);
+			}
+		}
+	}
+}
+
+void computeRaysColor(){
+	//compute the final color
+	//of each ray of the rayTree
+
+	for(int i = rayTreeSize-1; i>=0; i--){ 
+		//the array implementation of the binary tree
+		//ensures that the sons are placed after the father
+		//so I can compute the color from leaves to root
+		//this way
+		if(rayTree[i].dataValid){
+
+			int reflectedSon = getLeftSonIndex(i);
+			int refractedSon = getRightSonIndex(i);
+			if(refractedSon<rayTreeSize && rayTree[reflectedSon].dataValid && rayTree[refractedSon].dataValid){
+				int objectIndex = rayTree[i].objectIndex;
+				if(objectIndex<0){
+					ERROR_OCCURED=true;
+				}
+				float reflectionRatio = objectProperties[objectIndex].reflectionRatio;
+				float refractionRatio = objectProperties[objectIndex].refractionRatio;
+				float triangleColorRatio = 1 - reflectionRatio - refractionRatio;
+
+				vec3 reflectedColor = rayTree[reflectedSon].finalColor;
+				vec3 refractedColor = rayTree[refractedSon].finalColor;
+				vec3 triangleColor = rayTree[i].triangleColor;
+
+				rayTree[i].finalColor = reflectionRatio*reflectedColor + refractionRatio*refractedColor + triangleColorRatio*triangleColor;
+				
+			}
+			else{
+				
+				//we put the final color to the triangleColor
+				rayTree[i].finalColor = rayTree[i].triangleColor;
+			}
+		}
+
+	}
+}
+
+
 
 
 void main() {
 	vec3 ray_direction = normalize(non_normalized_ray_direction);
 
-	vec3 position; 
-	vec3 reflectedRay;
-	vec3 refractedRay;
-	vec3 triangleColor;
-	int objectIndex;
+	// vec3 position; 
+	// vec3 reflectedRay;
+	// vec3 refractedRay;
+	// vec3 triangleColor;
+	// int objectIndex;
 
 
+	// if(getRayInformation(camera_position, ray_direction, position, reflectedRay, 
+	// 		refractedRay, triangleColor, objectIndex)){
+	// 	//triangle found
 
-	if(getRayInformation(camera_position, ray_direction, position, reflectedRay, 
-			refractedRay, triangleColor, objectIndex)){
-		//triangle found
+	// 	float reflectionRatio = objectProperties[objectIndex].reflectionRatio;
+	// 	float refractionRatio = objectProperties[objectIndex].refractionRatio;
+	// 	float triangleColorRatio = 1 - reflectionRatio - refractionRatio;
 
-		float reflectionRatio = objectProperties[objectIndex].reflectionRatio;
-		float refractionRatio = objectProperties[objectIndex].refractionRatio;
-		float triangleColorRatio = 1 - reflectionRatio - refractionRatio;
-
-		//position = camera_position+4*ray_direction;
+	// 	//position = camera_position+4*ray_direction;
 		
-		vec3 reflectedColor = getRayColorWithoutRecursion(position, reflectedRay);
-		vec3 refractedColor = getRayColorWithoutRecursion(position, refractedRay);
+	// 	vec3 reflectedColor = getRayColorWithoutRecursion(position, reflectedRay);
+	// 	vec3 refractedColor = getRayColorWithoutRecursion(position, refractedRay);
 
-		vec3 mixedColor = reflectionRatio*reflectedColor + refractionRatio*refractedColor + triangleColorRatio*triangleColor;
+	// 	vec3 mixedColor = reflectionRatio*reflectedColor + refractionRatio*refractedColor + triangleColorRatio*triangleColor;
 
-		color = vec4(mixedColor, 1.0);
+	// 	color = vec4(mixedColor, 1.0);
 
-		// if(camera_position.z >-1.0){
-		// 	color = vec4(1.0, 0.0, 0.0, 1.0);
-		// }
-		// else{
-		// 	color = vec4(0.0, 0.0, 1.0, 1.0);
-		// }
+	// 	// if(camera_position.z >-1.0){
+	// 	// 	color = vec4(1.0, 0.0, 0.0, 1.0);
+	// 	// }
+	// 	// else{
+	// 	// 	color = vec4(0.0, 0.0, 1.0, 1.0);
+	// 	// }
 
 
 
+	// }
+	// else{
+	// 	color = vec4(triangleColor, 1.0);
+
+	// }
+
+
+	computeRayTree(camera_position, ray_direction);
+	computeRaysColor();
+	color = vec4(rayTree[0].finalColor, 1.0);
+
+	if(ERROR_OCCURED){
+		color = vec4(1.0, 0.0, 0.0, 1.0);
 	}
-	else{
-		color = vec4(triangleColor, 1.0);
-
-	}
-
-
 
 }
