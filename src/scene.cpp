@@ -6,6 +6,9 @@
 void Scene::init(){
 
     printf("init scene\n");
+    float r = ((double) rand() / (RAND_MAX)); //random number between 0 and 1
+    std::cout<<r<<std::endl;
+    
 
     float width = 4.f;
     float height = 0.1f;

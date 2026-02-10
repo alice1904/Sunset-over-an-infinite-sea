@@ -8,6 +8,8 @@
 #include <vector>
 
 #include <stdint.h>
+#include <iostream>
+#include <cstdlib> //for random values
 
 
 struct ObjectProperties_struct {

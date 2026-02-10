@@ -18,6 +18,7 @@
 
 #define _USE_MATH_DEFINES
 
+
 //#include <glad/gl.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -705,6 +706,7 @@ void update(const float delta) {
 }
 
 int main(int argc, char ** argv) {
+  srand((unsigned int)time(0));
   init(); // Your initialization code (user interface, OpenGL states, scene with geometry, material, lights, etc)
 
   printf("number of triangles : %ld\n", scene.triangleIndices.size());
