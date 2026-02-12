@@ -54,16 +54,21 @@ void Scene::init(){
     objectProperties = {
         {glm::vec3(0, 1, 1),
         n_triangles, 0.33, 0.33, 0.7, 0.0} //0.6, 0.0
-    };
+};
 
     //PHYSICS ATTRIBUTES
-    vertexVelocities.resize(vertexPositions.size());
+    vertexVelocities = std::vector<glm::vec3>(vertexPositions.size(), glm::vec3(0.0, 0.0, 0.0));
 
 }
 
 
 void Scene::update(float dt){
     for(int i=0; i<vertexPositions.size(); i++){
-        vertexVelocities[i] = vertexPositions[i];
+        float length = glm::length(vertexPositions[i]);
+        glm::vec3 direction = glm::normalize(vertexPositions[i]);
+        glm::vec3 acc = -k*(length - l0)*direction; //we ignore the mass which is included in k
+
+        vertexVelocities[i] += dt*acc;
+        vertexPositions[i] += dt*vertexVelocities[i];
     }
 }

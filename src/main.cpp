@@ -638,6 +638,17 @@ void clear() {
 void render() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Erase the color and z buffers.
 
+  //update vertex buffer
+  size_t bufferSize;
+  std::vector<float> bufferData;
+  getDataFromVec3Vector(scene.vertexPositions, bufferData);
+  bufferSize = sizeof(float)*bufferData.size();
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_vertexSbo);
+  glBufferData(
+            GL_SHADER_STORAGE_BUFFER, bufferSize, 
+            bufferData.data(), GL_DYNAMIC_READ);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, g_vertexSbo);
+
   //Camera informations
   float half_height = tan(glm::radians(g_camera.getFov())/2.0f);
   float half_width = half_height*g_camera.getAspectRatio();

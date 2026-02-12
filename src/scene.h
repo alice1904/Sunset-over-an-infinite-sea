@@ -47,7 +47,11 @@ class Scene {
         std::vector<ObjectProperties> objectProperties;
 
     private:
-        std::vector<glm::vec3> vertexVelocities;//
+        std::vector<glm::vec3> vertexVelocities;
+
+        //spring properties
+        float k = 1.0f;
+        float l0 = 0.0f;
         
 };
 
