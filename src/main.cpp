@@ -345,7 +345,7 @@ void initGLFW() {
   // Create the window
   g_window = glfwCreateWindow(
     1024, 768,
-    "Interactive 3D Applications (OpenGL) - Simple Solar System",
+    "IGR Project Alice Jeannin - Sunset over sea",
     nullptr, nullptr);
   if(!g_window) {
     std::cerr << "ERROR: Failed to open window" << std::endl;
@@ -605,7 +605,7 @@ void initGPU(){
 void initCamera() {
   int width, height;
   glfwGetWindowSize(g_window, &width, &height);
-  g_camera.init(glm::vec3(0.0, 0.0, -3.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
+  g_camera.init(glm::vec3(0.0, 0.8, -3.0), glm::vec3(0.0, 0.5, 0.0), glm::vec3(0.0, 1.0, 0.0));
   g_camera.setAspectRatio(static_cast<float>(width)/static_cast<float>(height));
   g_camera.setNear(0.1);
   g_camera.setFar(80.1);

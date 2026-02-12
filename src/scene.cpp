@@ -11,11 +11,13 @@ void Scene::init(){
     
 
     float width = 4.f;
-    float height = 0.1f;
+    float height = 0.0f;//0.1f
     float depth = 4.f;
-    int wave_resolution = 5; //the sea is a grid of size wave_resolution x wave_resolution
+    int wave_resolution = 10; //the sea is a grid of size wave_resolution x wave_resolution
     float width_step = 2*width/wave_resolution;
     float depth_step = 2*depth/wave_resolution;
+
+    float height_variance = 0.1f; //0.1
     // vertexPositions = { // the array of vertex Colors [x0, y0, z0, x1, y1, z1, ...]
 
     //     glm::vec3(width, -height, -depth),
@@ -28,8 +30,11 @@ void Scene::init(){
     for(int i=0; i<=wave_resolution; i++){
         for(int j=0; j<=wave_resolution; j++){
             float x = -width + i*width_step;
-            float y = -height;
             float z = -depth + j*depth_step;
+
+            float r = ((double) rand() / (RAND_MAX)); //random number between 0 and 1
+            r = r*2 -1; //random number between -1 and 1
+            float y = -height + r*height_variance;
             if(i==1 && j==1){
                 y = +height;
             }
@@ -52,8 +57,8 @@ void Scene::init(){
     int n_triangles = triangleIndices.size();
 
     objectProperties = {
-        {glm::vec3(0.2, 0.2, 1.0),
-        n_triangles, 0.33, 0.33, 0.6, 0.0}
+        {glm::vec3(0, 1, 1),
+        n_triangles, 0.33, 0.33, 0.7, 0.0} //0.6, 0.0
     };
 
     // glm::vec3 edge1 = vertexPositions[4] - vertexPositions[3];
