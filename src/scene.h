@@ -50,7 +50,7 @@ class Scene {
         std::vector<glm::vec3> vertexVelocities;
         //spring properties
         const float springConstantMean = 2.0;
-        const float springConstantVariance = 1.0;
+        const float springConstantVariance = 0.0;//1.0;
         std::vector<float> springConstants; 
         float l0 = 0.0f;
         
