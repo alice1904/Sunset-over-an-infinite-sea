@@ -18,15 +18,8 @@ void Scene::init(){
     float depth_step = 2*depth/wave_resolution;
 
     float height_variance = 0.1f; //0.1
-    // vertexPositions = { // the array of vertex Colors [x0, y0, z0, x1, y1, z1, ...]
 
-    //     glm::vec3(width, -height, -depth),
-    //     glm::vec3(-width, -height, -depth),
-    //     glm::vec3(width, -height, depth),
-    //     glm::vec3(-width, -height, depth)
-
-    // };
-
+    // VERTICES
     for(int i=0; i<=wave_resolution; i++){
         for(int j=0; j<=wave_resolution; j++){
             float x = -width + i*width_step;
@@ -42,6 +35,8 @@ void Scene::init(){
         }
     }
 
+
+    //TRIANGLES
     for(int i=0; i<wave_resolution; i++){
         for(int j=0; j<wave_resolution; j++){
             int a, b, c, d; //indices of the corners of the square
@@ -54,34 +49,11 @@ void Scene::init(){
         }
     }
 
+    //OBJECTS
     int n_triangles = triangleIndices.size();
-
     objectProperties = {
         {glm::vec3(0, 1, 1),
         n_triangles, 0.33, 0.33, 0.7, 0.0} //0.6, 0.0
     };
 
-    // glm::vec3 edge1 = vertexPositions[4] - vertexPositions[3];
-    // glm::vec3 edge2 = vertexPositions[5] - vertexPositions[3];
-
-    // glm::vec3 normal = glm::cross(edge1, edge2);
-
-    // vertexNormals = {
-    //     glm::vec3(0.f, 0.f, 1.f),
-    //     glm::vec3(0.f, 0.f, 1.f),
-    //     glm::vec3(0.f, 0.f, 1.f),
-    //     normal,
-    //     normal,
-    //     normal,
-    //     glm::vec3(0.f, 0.f, 1.f),
-
-    // };
-
-    // triangleIndices = {
-    //     glm::uvec3(0, 1, 2),
-    //     glm::uvec3(1, 2, 3)
-
-    // };
-
-    
 }
