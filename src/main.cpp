@@ -672,6 +672,7 @@ void render() {
 void update(const float delta) {
   //CAMERA
   
+  scene.update(delta);
 
   if(key_shift_pressed){
     if(key_right_pressed){

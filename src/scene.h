@@ -32,13 +32,22 @@ class Scene {
         Scene(){};
         ~Scene(){};
 
+        //init the geometry
         void init();
+
+        //compute the forces, 
+        //the new state vector 
+        //and update the scene
+        void update(float dt);
 
         std::vector<glm::vec3> vertexPositions;
         std::vector<glm::uvec3> triangleIndices;
         std::vector<glm::vec3> vertexNormals;
 
         std::vector<ObjectProperties> objectProperties;
+
+    private:
+        std::vector<glm::vec3> vertexVelocities;//
         
 };
 

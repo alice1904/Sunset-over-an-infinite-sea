@@ -56,4 +56,14 @@ void Scene::init(){
         n_triangles, 0.33, 0.33, 0.7, 0.0} //0.6, 0.0
     };
 
+    //PHYSICS ATTRIBUTES
+    vertexVelocities.resize(vertexPositions.size());
+
+}
+
+
+void Scene::update(float dt){
+    for(int i=0; i<vertexPositions.size(); i++){
+        vertexVelocities[i] = vertexPositions[i];
+    }
 }
