@@ -6,8 +6,6 @@
 void Scene::init(){
 
     printf("init scene\n");
-    float r = ((double) rand() / (RAND_MAX)); //random number between 0 and 1
-    std::cout<<r<<std::endl;
     
 
     float width = 4.f;
@@ -17,7 +15,7 @@ void Scene::init(){
     float width_step = 2*width/wave_resolution;
     float depth_step = 2*depth/wave_resolution;
 
-    float height_variance = 0.1f; //0.1
+    float height_variance = 0.15f; //0.1
 
     // VERTICES
     for(int i=0; i<=wave_resolution; i++){
@@ -58,16 +56,25 @@ void Scene::init(){
 
     //PHYSICS ATTRIBUTES
     vertexVelocities = std::vector<glm::vec3>(vertexPositions.size(), glm::vec3(0.0, 0.0, 0.0));
+    springConstants.resize(vertexPositions.size());
+    for(int i=0; i<springConstants.size(); i++){
+        float r = ((double) rand() / (RAND_MAX)); //random number between 0 and 1
+        r = r*2 -1; //random number between -1 and 1
+        springConstants[i] = springConstantMean + r*springConstantVariance;
+    }
 
 }
 
 
 void Scene::update(float dt){
     for(int i=0; i<vertexPositions.size(); i++){
-        float length = glm::length(vertexPositions[i]);
-        glm::vec3 direction = glm::normalize(vertexPositions[i]);
+        glm::vec3 direction = glm::vec3(0.0, vertexPositions[i].y, 0.0);
+        float length = glm::length(direction);
+        if(length!=0.0){
+            direction = glm::normalize(direction);
+        }
+        float k = springConstants[i];
         glm::vec3 acc = -k*(length - l0)*direction; //we ignore the mass which is included in k
-
         vertexVelocities[i] += dt*acc;
         vertexPositions[i] += dt*vertexVelocities[i];
     }

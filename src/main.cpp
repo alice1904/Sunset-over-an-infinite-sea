@@ -16,6 +16,13 @@
 // have been supplied.
 // ----------------------------------------------------------------------------
 
+//to make video : 
+//  start simu and press r
+//  frame will be stored as images in the screenshots/videos folder
+//  run the folowing commands : 
+//    ffmpeg -framerate 30 -i videos/s%04d.tga -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -c:v libx264 -pix_fmt yuv420p output.mp4
+//    rm videos/*  
+
 #define _USE_MATH_DEFINES
 
 
@@ -27,10 +34,13 @@
 #include <glm/ext.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 
+
+#include <stdlib.h>
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <iomanip>
 #include <vector>
 #include <string>
 #include <cmath>
@@ -49,6 +59,10 @@
 
 // Window parameters
 GLFWwindow *g_window = nullptr;
+int gWindowWidth = 1024;
+int gWindowHeight = 768;
+bool gRecordVideo = false;
+int gSavedCnt = 0;
 
 // GPU objects
 GLuint g_program = 0; // A GPU program contains at least a vertex shader and a fragment shader
@@ -283,6 +297,8 @@ GLuint loadTextureFromFileToGPU(const std::string &filename) {
 
 // Executed each time the window is resized. Adjust the aspect ratio and the rendering viewport to the current window.
 void windowSizeCallback(GLFWwindow* window, int width, int height) {
+  gWindowWidth = width;
+  gWindowHeight = height;
   g_camera.setAspectRatio(static_cast<float>(width)/static_cast<float>(height));
   glViewport(0, 0, (GLint)width, (GLint)height); // Dimension of the rendering region in the window
 }
@@ -295,6 +311,9 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   } else if(action == GLFW_PRESS && (key == GLFW_KEY_ESCAPE || key == GLFW_KEY_Q)) {
     glfwSetWindowShouldClose(window, true); // Closes the application if the escape key is pressed
+  } else if(action == GLFW_PRESS && key == GLFW_KEY_R) {
+    gRecordVideo = !gRecordVideo;
+    std::cout<<"toggle video record\n"<<std::endl;
   }
 
   else if(action == GLFW_PRESS && (key == GLFW_KEY_RIGHT)){
@@ -344,7 +363,7 @@ void initGLFW() {
 
   // Create the window
   g_window = glfwCreateWindow(
-    1024, 768,
+    gWindowWidth, gWindowHeight,
     "IGR Project Alice Jeannin - Sunset over sea",
     nullptr, nullptr);
   if(!g_window) {
@@ -634,6 +653,23 @@ void clear() {
   glfwTerminate();
 }
 
+void savePicture(){
+  std::stringstream fpath;
+  fpath <<"../../screenshots/videos/"<< "s" << std::setw(4) << std::setfill('0') << gSavedCnt++ << ".tga";
+
+  //std::cout << "Saving file " << fpath.str() << " ... " << std::flush;
+  const short int w = gWindowWidth;
+  const short int h = gWindowHeight;
+  std::vector<int> buf(w*h*3, 0);
+  glReadPixels(0, 0, w, h, GL_BGR, GL_UNSIGNED_BYTE, &(buf[0]));
+
+  FILE *out = fopen(fpath.str().c_str(), "wb");
+  short TGAhead[] = {0, 2, 0, 0, 0, 0, w, h, 24};
+  fwrite(&TGAhead, sizeof(TGAhead), 1, out);
+  fwrite(&(buf[0]), 3*w*h, 1, out);
+  fclose(out);
+}
+
 // The main rendering call
 void render() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Erase the color and z buffers.
@@ -677,14 +713,25 @@ void render() {
 
   glBindVertexArray(g_vao);     // activate the VAO storing geometry data
   glDrawElements(GL_TRIANGLES, g_triangleIndices.size(), GL_UNSIGNED_INT, 0); // Call for rendering: stream the current GPU geometry through the current GPU program
+
+
+  if(gRecordVideo) {
+    savePicture();//save the current frame in the disk
+    
+  }
+
+
 }
 
 // Update any accessible variable based on the current time
 void update(const float delta) {
-  //CAMERA
+
+  //SCENE
   
   scene.update(delta);
 
+  //CAMERA
+  
   if(key_shift_pressed){
     if(key_right_pressed){
       g_camera.rotate_right(delta);

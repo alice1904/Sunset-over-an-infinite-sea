@@ -48,9 +48,10 @@ class Scene {
 
     private:
         std::vector<glm::vec3> vertexVelocities;
-
         //spring properties
-        float k = 1.0f;
+        const float springConstantMean = 2.0;
+        const float springConstantVariance = 1.0;
+        std::vector<float> springConstants; 
         float l0 = 0.0f;
         
 };
