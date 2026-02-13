@@ -11,6 +11,10 @@
 #include <iostream>
 #include <cstdlib> //for random values
 
+typedef struct  {
+    bool shouldBeDisplayed;
+    bool hasChanged;
+} SquareInfo; 
 
 struct ObjectProperties_struct {
     //alignement set to 4 float for the vec3 in glsl
@@ -53,6 +57,11 @@ class Scene {
         std::vector<glm::vec3> vertexRelativePositions; //position relative to the point on the cosinus
         
         int getVertexIndex(int i ,int j);
+
+        //infinite wave
+        std::vector<SquareInfo> squareInfos; //tells wether the couple of triangle 
+                            //that represent the square whose left corer is vertex[i]
+                            //should be display or not
 
         //wave parameters
         const int wave_resolution = 10; 

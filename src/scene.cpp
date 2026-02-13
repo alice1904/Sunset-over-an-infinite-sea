@@ -1,5 +1,9 @@
 #include "scene.h"
 
+void printVec3(glm::vec3 v){
+    std::cout<<v.x<<" "<<v.y<<" "<<v.z<<std::endl;
+}
+
 int getModulo(int a, int b){
     // return c s.a. a = c[b]
     // and c€[0, b-1]
@@ -28,7 +32,7 @@ int Scene::getVertexIndex(int i ,int j){
     //in this case, we compute the result of==for i%SIZE and j%SIZE
     i = getModulo(i, wave_resolution+1);
     j = getModulo(j, wave_resolution+1);
-    return i + j*(wave_resolution+1);;
+    return j + i*(wave_resolution+1);;
 }
 
 
@@ -60,26 +64,39 @@ void Scene::init(glm::vec3 cameraCenter){
             vertexRelativePositions.push_back(glm::vec3(x, y, z));
             vertexPositions.push_back(vertexRelativePositions[i]); //it will be update with the cosinus when the 
                                                             //update() function will be called
+
+            if(i<wave_resolution && j<wave_resolution){
+                squareInfos.push_back({true, false});
+            }
+            else{
+                squareInfos.push_back({false, false});
+            }
         }
     }
 
 
     //TRIANGLES
-    for(int i=0; i<wave_resolution; i++){
-        for(int j=0; j<wave_resolution; j++){
-            int a, b, c, d; //indices of the corners of the square
-            a = getVertexIndex(i, j);
-            b = getVertexIndex(i+1, j);
-            c = getVertexIndex(i+1, j+1);
-            d = getVertexIndex(i, j+1);
-            // a = i   +      j*(wave_resolution+1);
-            // b = i+1 +      j*(wave_resolution+1);
-            // c = i+1 +  (j+1)*(wave_resolution+1);
-            // d = i   +  (j+1)*(wave_resolution+1);
-            triangleIndices.push_back(glm::uvec3(a, b, c));
-            triangleIndices.push_back(glm::uvec3(a, c, d));
+    int vertexIndex = 0;
+    for(int i=0; i<=wave_resolution; i++){
+        for(int j=0; j<=wave_resolution; j++){
+            if(squareInfos[vertexIndex].shouldBeDisplayed){
+                int a, b, c, d; //indices of the corners of the square
+                a = getVertexIndex(i, j);
+                b = getVertexIndex(i+1, j);
+                c = getVertexIndex(i+1, j+1);
+                d = getVertexIndex(i, j+1);
+                triangleIndices.push_back(glm::uvec3(a, b, c));
+                triangleIndices.push_back(glm::uvec3(a, c, d));
+            }
+            else{
+                //this triangle is a point and will not be visible
+                triangleIndices.push_back(glm::uvec3(0, 0, 0));
+                triangleIndices.push_back(glm::uvec3(0, 0, 0));
+            }
+            vertexIndex+=1;
         }
     }
+
 
     //OBJECTS
     int n_triangles = triangleIndices.size();
@@ -105,6 +122,24 @@ float Scene::waveFunction(float x, float y, float t){
 }
 
 void Scene::update(float dt, glm::vec3 cameraCenter){
+    // glm::vec3 vertex = vertexRelativePositions[getVertexIndex(wave_resolution, wave_resolution)];
+    // float x = vertex.x;
+    // float z = vertex.z;
+    // // printVec3(cameraCenter);
+    // // printVec3(vertex);
+    // // std::cout<<seaWidth<<std::endl;
+    // if(z > cameraCenter.z && z - cameraCenter.z > seaWidth/2 ){
+    //     std::cout<<"vertex est loin devant"<<std::endl;
+    // }
+
+    // vertex = vertexRelativePositions[getVertexIndex(wave_resolution-1, wave_resolution)];
+    // x = vertex.x;
+    // z = vertex.z;
+    // if(z > cameraCenter.z && z - cameraCenter.z > seaWidth/2 ){
+    //     std::cout<<"vertex 2 est loin devant"<<std::endl;
+    // }
+
+
     currentTime+=dt; //time since simulation started
     for(int i=0; i<vertexPositions.size(); i++){
         glm::vec3 direction = glm::vec3(0.0, vertexRelativePositions[i].y, 0.0);
