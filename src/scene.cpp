@@ -29,7 +29,9 @@ void Scene::init(){
             if(i==1 && j==1){
                 y = +height;
             }
-            vertexPositions.push_back(glm::vec3(x, y, z));
+
+            vertexRelativePositions.push_back(glm::vec3(x, y, z));
+            vertexPositions.push_back(vertexRelativePositions[i]);
         }
     }
 
@@ -65,10 +67,15 @@ void Scene::init(){
 
 }
 
+float Scene::waveFunction(float x, float y, float t){
+    
+    return waveAmplitude*cos(waveOmega*t - glm::dot(waveVector, glm::vec2(x, y)));
+}
 
 void Scene::update(float dt){
+    currentTime+=dt; //time since simulation started
     for(int i=0; i<vertexPositions.size(); i++){
-        glm::vec3 direction = glm::vec3(0.0, vertexPositions[i].y, 0.0);
+        glm::vec3 direction = glm::vec3(0.0, vertexRelativePositions[i].y, 0.0);
         float length = glm::length(direction);
         if(length!=0.0){
             direction = glm::normalize(direction);
@@ -76,6 +83,14 @@ void Scene::update(float dt){
         float k = springConstants[i];
         glm::vec3 acc = -k*(length - l0)*direction; //we ignore the mass which is included in k
         vertexVelocities[i] += dt*acc;
-        vertexPositions[i] += dt*vertexVelocities[i];
+        vertexRelativePositions[i] += dt*vertexVelocities[i];
+
+        float x = vertexRelativePositions[i].x;
+        float y = vertexRelativePositions[i].y;
+        float z = vertexRelativePositions[i].z;
+        float offset = waveFunction(x, z, currentTime);
+
+        vertexPositions[i] = glm::vec3(0, offset, 0) + vertexRelativePositions[i];
+        vertexPositions[i] = glm::vec3(0, offset, 0) + vertexRelativePositions[i];
     }
 }

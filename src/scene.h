@@ -47,10 +47,19 @@ class Scene {
         std::vector<ObjectProperties> objectProperties;
 
     private:
+        //wave parameters
+        const float waveOmega = 10.0f; //pulse
+        const glm::vec2 waveVector = glm::vec2(1.0, 0.0); //wave vector
+        const float waveAmplitude = 0.2f;
+        float waveFunction(float x, float y, float t);
+
+
+        float currentTime = 0.0;
         std::vector<glm::vec3> vertexVelocities;
+        std::vector<glm::vec3> vertexRelativePositions; //position relative to the point on the cosinus
         //spring properties
         const float springConstantMean = 2.0;
-        const float springConstantVariance = 0.0;//1.0;
+        const float springConstantVariance = 1.0;//1.0;
         std::vector<float> springConstants; 
         float l0 = 0.0f;
         
