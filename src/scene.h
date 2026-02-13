@@ -33,12 +33,12 @@ class Scene {
         ~Scene(){};
 
         //init the geometry
-        void init();
+        void init(glm::vec3 cameraCenter);
 
         //compute the forces, 
         //the new state vector 
         //and update the scene
-        void update(float dt);
+        void update(float dt, glm::vec3 cameraCenter);
 
         std::vector<glm::vec3> vertexPositions;
         std::vector<glm::uvec3> triangleIndices;
@@ -47,25 +47,27 @@ class Scene {
         std::vector<ObjectProperties> objectProperties;
 
     private:
-        //wave parameters
+        float currentTime = 0.0;
+        const float seaWidth = 8.f; //the sea is a square of side seaWidth
+        std::vector<glm::vec3> vertexVelocities;
+        std::vector<glm::vec3> vertexRelativePositions; //position relative to the point on the cosinus
+        
+        int getVertexIndex(int i ,int j);
 
+        //wave parameters
         const int wave_resolution = 10; 
         const float height_variance = 0.15f;//0.15f;//0.15f; 
         const float waveOmega = 1.5f; //pulse
         const glm::vec2 waveVector = -glm::vec2(1.0, 1.0); //wave vector
-        const float waveAmplitude = 0.2f;
+        const float waveAmplitude = 0.18f;
         float waveFunction(float x, float y, float t);
 
-
-        float currentTime = 0.0;
-        std::vector<glm::vec3> vertexVelocities;
-        std::vector<glm::vec3> vertexRelativePositions; //position relative to the point on the cosinus
         //spring properties
         const float springConstantMean = 2.0;
         const float springConstantVariance = 1.0;//1.0;
         std::vector<float> springConstants; 
         float l0 = 0.0f;
-        
+      
 };
 
 #endif

@@ -161,6 +161,7 @@ public:
   inline float getFar() const { return m_far; }
   inline void setFar(const float n) { m_far = n; }
   inline glm::vec3 getPosition() { return m_pos; }
+  inline glm::vec3 getCenter() { return m_center; }
   inline glm::vec3 getForward() {return m_forward;}
   inline glm::vec3 getRight() {return m_right;}
   inline glm::vec3 getUp() {return m_up;}
@@ -450,8 +451,18 @@ void initGPUprogram() {
   // TODO: set shader variables, textures, etc.
 }
 
+
+void initCamera() {
+  int width, height;
+  glfwGetWindowSize(g_window, &width, &height);//0.5
+  g_camera.init(glm::vec3(0.0, 1.0, -3.0), glm::vec3(0.0, 0.5, 0.0), glm::vec3(0.0, 1.0, 0.0)); //height : 1.1//0.8
+  g_camera.setAspectRatio(static_cast<float>(width)/static_cast<float>(height));
+  g_camera.setNear(0.1);
+  g_camera.setFar(80.1);
+}
+
 void initScene(){
-  scene.init();
+  scene.init(g_camera.getCenter());
 }
 
 // Define your mesh(es) in the CPU memory
@@ -638,29 +649,14 @@ void initGPU(){
   initGPUprogram();
 }
 
-void initCamera() {
-  int width, height;
-  glfwGetWindowSize(g_window, &width, &height);//0.5
-  g_camera.init(glm::vec3(0.0, 1.0, -3.0), glm::vec3(0.0, 0.5, 0.0), glm::vec3(0.0, 1.0, 0.0)); //height : 1.1//0.8
-  g_camera.setAspectRatio(static_cast<float>(width)/static_cast<float>(height));
-  g_camera.setNear(0.1);
-  g_camera.setFar(80.1);
-  // int width, height;
-  // glfwGetWindowSize(g_window, &width, &height);
-  // g_camera.setAspectRatio(static_cast<float>(width)/static_cast<float>(height));
-
-  // g_camera.setColor(glm::vec3(0.0, 0.0, 3.0));
-  // g_camera.setNear(0.1);
-  // g_camera.setFar(80.1);
-}
 
 void init() {
   initGLFW();
   initOpenGL();
+  initCamera();
   initScene();
   initCPUgeometry();
   initGPU();
-  initCamera();
 }
 
 void clear() {
@@ -745,13 +741,13 @@ void update(const float delta) {
 
   //SCENE
   
-  scene.update(delta);
+  scene.update(delta, g_camera.getCenter());
 
   //CAMERA
   
   if(key_shift_pressed){
     if(key_right_pressed){
-      g_camera.rotate_right(delta);
+      //g_camera.rotate_right(delta);
     }
     else if(key_left_pressed){
       //g_camera.rotate_left(delta);
