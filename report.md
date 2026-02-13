@@ -37,5 +37,11 @@ blabla
 For the sea, I took inspiration from the video game Monument Valley. 
 I split a rectangle into triangles (a regular grid, each cell being split into 2 triangles). The height of each vertex is random in a certain range, which gives us a nice blocky sea. Then I attached a vertical spring to each vertex. I had to put a different spring constant to each vertex, otherwise, the vertices would be at the height 0 at the same time, and then we have an ugly flat sea for a moment and a brutal change of triangle colors when the triangles' orientation change at the same time.
 
+Unfortunately, with this animation, there is no coherence between the wave crests while in the sea you usually have huge waves in addition to small oscillation of the water. That's why I added a vertical offset to each vertex which is obtained with the plane wave formula : 
+
+$ offset = cos(w*t-\vec{k}.\vec{x}) $ 
+
+In our simulation, $\vec{x}$ is the position in the horizontal (x, z) plane.
+
 # TODO 
 - probleme avec redefition sortie

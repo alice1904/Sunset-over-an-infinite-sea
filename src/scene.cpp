@@ -10,12 +10,10 @@ void Scene::init(){
 
     float width = 4.f;
     float height = 0.0f;//0.1f
-    float depth = 4.f;
-    int wave_resolution = 10; //the sea is a grid of size wave_resolution x wave_resolution
+    float depth = 4.f;//the sea is a grid of size wave_resolution x wave_resolution
     float width_step = 2*width/wave_resolution;
     float depth_step = 2*depth/wave_resolution;
 
-    float height_variance = 0.15f; //0.1
 
     // VERTICES
     for(int i=0; i<=wave_resolution; i++){
@@ -68,8 +66,8 @@ void Scene::init(){
 }
 
 float Scene::waveFunction(float x, float y, float t){
-    
-    return waveAmplitude*cos(waveOmega*t - glm::dot(waveVector, glm::vec2(x, y)));
+    float phase = waveOmega*t - glm::dot(waveVector, glm::vec2(x, y));
+    return waveAmplitude*(cos(phase));
 }
 
 void Scene::update(float dt){

@@ -48,8 +48,11 @@ class Scene {
 
     private:
         //wave parameters
-        const float waveOmega = 10.0f; //pulse
-        const glm::vec2 waveVector = glm::vec2(1.0, 0.0); //wave vector
+
+        const int wave_resolution = 10; 
+        const float height_variance = 0.15f;//0.15f;//0.15f; 
+        const float waveOmega = 1.5f; //pulse
+        const glm::vec2 waveVector = -glm::vec2(1.0, 1.0); //wave vector
         const float waveAmplitude = 0.2f;
         float waveFunction(float x, float y, float t);
 
