@@ -179,7 +179,11 @@ public:
 
   void move_right(float delta){
     //change the position
-    m_pos = m_center + glm::rotate(m_pos-m_center, delta*move_angle_step, m_up); //rotate m_pos around up axis
+    //m_pos = m_center + glm::rotate(m_pos-m_center, delta*move_angle_step, m_up); //rotate m_pos around up axis
+    
+    glm::vec3 right = glm::vec3(-1.0, 0.0, 0.0);
+    m_pos =  m_pos + delta*move_step*right;
+    m_center = m_center + delta*move_step*right;
     //update the directions
     updateForward();
     updateRightFromUp();
@@ -187,7 +191,11 @@ public:
 
   void move_left(float delta){
     //change the position
-    m_pos = m_center + glm::rotate(m_pos-m_center, -delta*move_angle_step, m_up); //rotate m_pos around up axis
+    //m_pos = m_center + glm::rotate(m_pos-m_center, -delta*move_angle_step, m_up); //rotate m_pos around up axis
+    
+    glm::vec3 right = glm::vec3(-1.0, 0.0, 0.0);
+    m_pos =  m_pos - delta*move_step*right;
+    m_center = m_center - delta*move_step*right;
     //update the directions
     updateForward();
     updateRightFromUp();
@@ -210,27 +218,36 @@ public:
   }
 
   void move_forward(float delta){
-    glm::vec3 pos = m_pos + delta*move_step*m_forward;
+    //glm::vec3 pos = m_pos + delta*move_step*m_forward;
     //if pos is too close to the center or is on the other side of the center, 
     //we don't update m_pos
-    if(glm::dot(m_center-pos, m_forward) >= min_distance_to_center){
-      m_pos = pos;
-    }
+    // if(glm::dot(m_center-pos, m_forward) >= min_distance_to_center){
+    //   m_pos = pos;
+    // }
+    glm::vec3 forward = glm::vec3(0.0, 0.0, 1.0);
+    m_pos =  m_pos + delta*move_step*forward;
+    m_center =  m_center + delta*move_step*forward;
   }
 
   void move_backward(float delta){
-    m_pos = m_pos - delta*move_step*m_forward;
+    glm::vec3 forward = glm::vec3(0.0, 0.0, 1.0);
+    m_pos = m_pos - delta*move_step*forward;
+    m_center =  m_center - delta*move_step*forward;
   }
 
   void rotate_right(float delta){
     //change the direction
-    m_up = glm::rotate(m_up, -delta*move_angle_step, m_forward);
+    //we use (0, 1, 0) instead of up to look down
+    printf("%f, %f, %f, \n", m_forward.x, m_forward.y, m_forward.z);
+    m_forward = glm::rotate(m_forward, -delta*move_angle_step, glm::vec3(0, 1, 0));
+    m_center = m_pos + m_forward;
     updateRightFromUp();
   }
 
   void rotate_left(float delta){
     //change the direction
-    m_up = glm::rotate(m_up, delta*move_angle_step, m_forward);
+    m_forward = glm::rotate(m_forward, delta*move_angle_step, glm::vec3(0, 1, 0));
+    m_center = m_pos + m_forward;
     updateRightFromUp();
   }
 
@@ -623,7 +640,7 @@ void initGPU(){
 
 void initCamera() {
   int width, height;
-  glfwGetWindowSize(g_window, &width, &height);
+  glfwGetWindowSize(g_window, &width, &height);//0.5
   g_camera.init(glm::vec3(0.0, 1.0, -3.0), glm::vec3(0.0, 0.5, 0.0), glm::vec3(0.0, 1.0, 0.0)); //height : 1.1//0.8
   g_camera.setAspectRatio(static_cast<float>(width)/static_cast<float>(height));
   g_camera.setNear(0.1);
@@ -737,13 +754,13 @@ void update(const float delta) {
       g_camera.rotate_right(delta);
     }
     else if(key_left_pressed){
-      g_camera.rotate_left(delta);
+      //g_camera.rotate_left(delta);
     }
     else if(key_up_pressed){
-      g_camera.move_forward(delta);
+      g_camera.move_up(delta);
     }
     else if(key_down_pressed){
-      g_camera.move_backward(delta);
+      g_camera.move_down(delta);
     }
   }
   else{
@@ -754,10 +771,10 @@ void update(const float delta) {
       g_camera.move_left(delta);
     }
     else if(key_up_pressed){
-      g_camera.move_up(delta);
+      g_camera.move_forward(delta);
     }
     else if(key_down_pressed){
-      g_camera.move_down(delta);
+      g_camera.move_backward(delta);
     }
   }
 
