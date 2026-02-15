@@ -4,6 +4,35 @@ void printVec3(glm::vec3 v){
     std::cout<<v.x<<" "<<v.y<<" "<<v.z<<std::endl;
 }
 
+void printUvec3(glm::uvec3 v){
+    std::cout<<v.x<<" "<<v.y<<" "<<v.z<<std::endl;
+}
+
+void Scene::printHelp(glm::vec3 cameraCenter){
+            std::cout<<"*****************************\n";
+            printVec3(cameraCenter);
+            for(int vertexIndex=0; vertexIndex<vertexRelativePositions.size(); vertexIndex++){
+                int i, j;
+                getGridPositionRelativeToCamera(vertexRelativePositions[vertexIndex], cameraCenter, &i, &j);
+
+                assert(i<=wave_resolution && j<=wave_resolution);
+                std::cout<<vertexIndex<<" | ";
+                std::cout<<vertexIndex/(wave_resolution+1)<<" "<<vertexIndex%(wave_resolution+1);
+                std::cout<<" : "<<i<<" "<<j<<" "<<squareInfos[vertexIndex].shouldBeDisplayed<<std::endl;
+                printVec3(vertexRelativePositions[vertexIndex]);
+                if(squareInfos[vertexIndex].shouldBeDisplayed){
+                    assert(i<wave_resolution && j<wave_resolution);
+                }
+            
+                
+            }
+
+            std::cout<<"**********triangles*******\n";
+            for(int i=0; i<triangleIndices.size(); i++){
+                printVec3(triangleIndices[i]);
+            }
+        }
+
 int getModulo(int a, int b){
     // return c s.a. a = c[b]
     // and c€[0, b-1]
@@ -44,8 +73,8 @@ void Scene::init(glm::vec3 cameraCenter){
     float halfWidth = seaWidth/2;
     float height = 0.0f;
     float halfDepth = seaWidth/2; //the sea is a grid of size wave_resolution x wave_resolution
-    float width_step = seaWidth/wave_resolution;
-    float depth_step = seaWidth/wave_resolution;
+    
+    float depth_step = width_step;
 
 
     // VERTICES
@@ -100,10 +129,10 @@ void Scene::init(glm::vec3 cameraCenter){
 
     //OBJECTS
     int n_triangles = triangleIndices.size();
-    objectProperties = {
+    objectProperties = {    
         {glm::vec3(0, 1, 1),
         n_triangles, 0.33, 0.33, 0.7, 0.0} //0.6, 0.0
-};
+    };
 
     //PHYSICS ATTRIBUTES
     vertexVelocities = std::vector<glm::vec3>(vertexPositions.size(), glm::vec3(0.0, 0.0, 0.0));
@@ -116,48 +145,148 @@ void Scene::init(glm::vec3 cameraCenter){
 
 }
 
+int getRoundInt(float x){
+    if(x>=0){
+        int n = (int) x;
+        if (x-n>0.5){
+            return n+1;
+        }
+        return n;
+    }
+    int n = (int)x;
+    if(n-x>0.5){
+        return n-1;
+    }
+    return n;
+}
+
+
+void Scene::getGridPositionRelativeToCamera(glm::vec3 pos, glm::vec3 cameraCenter, int* i, int*j){
+    float halfWIdth = seaWidth/2;
+
+    *i = getRoundInt((pos.x - cameraCenter.x + halfWIdth)/width_step);
+    *j = getRoundInt((pos.z - cameraCenter.z + halfWIdth)/width_step);
+}
+
 float Scene::waveFunction(float x, float y, float t){
     float phase = waveOmega*t - glm::dot(waveVector, glm::vec2(x, y));
     return waveAmplitude*(cos(phase));
 }
 
+void Scene::updateTriangles(glm::vec3 cameraCenter){
+    int vertexIndex = 0;
+    for(int i=0; i<=wave_resolution; i++){
+        for(int j=0; j<=wave_resolution; j++){
+            // if(squareInfos[vertexIndex].hasChanged){
+            //     squareInfos[vertexIndex].hasChanged = false;
+                if(squareInfos[vertexIndex].shouldBeDisplayed){
+                    int a, b, c, d; //indices of the corners of the square
+                    a = getVertexIndex(i, j);
+                    b = getVertexIndex(i+1, j);
+                    c = getVertexIndex(i+1, j+1);
+                    d = getVertexIndex(i, j+1);
+                    if(abs(vertexRelativePositions[a].x - vertexRelativePositions[b].x)>width_step){
+                        int i0,j0;
+                        getGridPositionRelativeToCamera(vertexRelativePositions[a], cameraCenter, &i0, &j0);
+                        std::cout<<"a : "<<i0<< " "<<j0<<" "<<wave_resolution<<std::endl;
+
+                        getGridPositionRelativeToCamera(vertexRelativePositions[b], cameraCenter, &i0, &j0);
+                        std::cout<<"b : "<<i0<< " "<<j0<<std::endl;
+                    }
+                    triangleIndices[vertexIndex*2]   =  glm::uvec3(a, b, c);
+                    triangleIndices[vertexIndex*2+1] = glm::uvec3(a, c, d);
+                }
+                else{
+                    //this triangle is a point and will not be visible
+                    triangleIndices[vertexIndex*2] = glm::uvec3(0, 0, 0);
+                    triangleIndices[vertexIndex*2+1] = glm::uvec3(0, 0, 0);
+                }
+                vertexIndex+=1;
+            //}
+        }
+    }
+}
+
 void Scene::update(float dt, glm::vec3 cameraCenter){
-    // glm::vec3 vertex = vertexRelativePositions[getVertexIndex(wave_resolution, wave_resolution)];
-    // float x = vertex.x;
-    // float z = vertex.z;
-    // // printVec3(cameraCenter);
-    // // printVec3(vertex);
-    // // std::cout<<seaWidth<<std::endl;
-    // if(z > cameraCenter.z && z - cameraCenter.z > seaWidth/2 ){
-    //     std::cout<<"vertex est loin devant"<<std::endl;
-    // }
-
-    // vertex = vertexRelativePositions[getVertexIndex(wave_resolution-1, wave_resolution)];
-    // x = vertex.x;
-    // z = vertex.z;
-    // if(z > cameraCenter.z && z - cameraCenter.z > seaWidth/2 ){
-    //     std::cout<<"vertex 2 est loin devant"<<std::endl;
-    // }
-
 
     currentTime+=dt; //time since simulation started
-    for(int i=0; i<vertexPositions.size(); i++){
-        glm::vec3 direction = glm::vec3(0.0, vertexRelativePositions[i].y, 0.0);
+    for(int vertexIndex=0; vertexIndex<vertexPositions.size(); vertexIndex++){
+
+        //infinite sea
+        int i,j;
+        getGridPositionRelativeToCamera(vertexRelativePositions[vertexIndex], cameraCenter, &i, &j);
+        int new_i, new_j;
+        new_i = getModulo(i, wave_resolution+1);
+        new_j = getModulo(j, wave_resolution+1);
+        if(i!=new_i || j!=new_j){
+            //should move vertex
+            if(i!=new_i){
+                vertexRelativePositions[vertexIndex].x += ((new_i - i)/(wave_resolution+1))*(seaWidth+width_step);
+            }
+            if(j!=new_j){
+                vertexRelativePositions[vertexIndex].z += ((new_j - j)/(wave_resolution+1))*(seaWidth+width_step);
+            }
+
+            getGridPositionRelativeToCamera(vertexRelativePositions[vertexIndex], cameraCenter, &i, &j);
+            if(i!=new_i && j!=new_j){
+                std::cout<<i<<" "<<new_i<<" "<<j<<" "<<new_j<<std::endl;
+                assert(i==new_i && j==new_j);
+            }
+            assert(i<=wave_resolution && j<=wave_resolution);
+
+            
+        }
+
+        bool shouldBeDisplayed = true;
+        if(new_i==wave_resolution || new_j==wave_resolution){
+            shouldBeDisplayed = false;
+        }
+        if(squareInfos[vertexIndex].shouldBeDisplayed!=shouldBeDisplayed){
+            squareInfos[vertexIndex].shouldBeDisplayed = shouldBeDisplayed;
+            squareInfos[vertexIndex].hasChanged = true;
+        }
+        squareInfos[vertexIndex].shouldBeDisplayed = shouldBeDisplayed;
+        squareInfos[vertexIndex].hasChanged = true;
+
+        if(squareInfos[vertexIndex].shouldBeDisplayed){
+            assert(i<wave_resolution && j<wave_resolution);
+        }
+
+
+        //spring force
+        glm::vec3 direction = glm::vec3(0.0, vertexRelativePositions[vertexIndex].y, 0.0);
         float length = glm::length(direction);
         if(length!=0.0){
             direction = glm::normalize(direction);
         }
-        float k = springConstants[i];
+        float k = springConstants[vertexIndex];
         glm::vec3 acc = -k*(length - l0)*direction; //we ignore the mass which is included in k
-        vertexVelocities[i] += dt*acc;
-        vertexRelativePositions[i] += dt*vertexVelocities[i];
+        vertexVelocities[vertexIndex] += dt*acc;
+        vertexRelativePositions[vertexIndex] += dt*vertexVelocities[vertexIndex];
 
-        float x = vertexRelativePositions[i].x;
-        float y = vertexRelativePositions[i].y;
-        float z = vertexRelativePositions[i].z;
+        //general wave offset
+        float x = vertexRelativePositions[vertexIndex].x;
+        float y = vertexRelativePositions[vertexIndex].y;
+        float z = vertexRelativePositions[vertexIndex].z;
         float offset = waveFunction(x, z, currentTime);
 
-        vertexPositions[i] = glm::vec3(0, offset, 0) + vertexRelativePositions[i];
-        vertexPositions[i] = glm::vec3(0, offset, 0) + vertexRelativePositions[i];
+        vertexPositions[vertexIndex] = glm::vec3(0, offset, 0) + vertexRelativePositions[vertexIndex];
+        vertexPositions[vertexIndex] = glm::vec3(0, offset, 0) + vertexRelativePositions[vertexIndex];
+
+
+        getGridPositionRelativeToCamera(vertexRelativePositions[vertexIndex], cameraCenter, &i, &j);
+        assert(i<=wave_resolution && j<=wave_resolution);
+        if(squareInfos[vertexIndex].shouldBeDisplayed){
+            assert(i<wave_resolution && j<wave_resolution);
+        }
     }
+
+    updateTriangles(cameraCenter);
+    for(int vertexIndex=0; vertexIndex<vertexPositions.size(); vertexIndex++){
+        int i, j;
+        getGridPositionRelativeToCamera(vertexRelativePositions[vertexIndex], cameraCenter, &i, &j);
+        assert(i<=wave_resolution && j<=wave_resolution);
+        
+    }
+    
 }

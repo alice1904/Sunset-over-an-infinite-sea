@@ -11,6 +11,8 @@
 #include <iostream>
 #include <cstdlib> //for random values
 
+
+
 typedef struct  {
     bool shouldBeDisplayed;
     bool hasChanged;
@@ -39,6 +41,9 @@ class Scene {
         //init the geometry
         void init(glm::vec3 cameraCenter);
 
+
+        void printHelp(glm::vec3 cameraCenter);
+
         //compute the forces, 
         //the new state vector 
         //and update the scene
@@ -62,9 +67,15 @@ class Scene {
         std::vector<SquareInfo> squareInfos; //tells wether the couple of triangle 
                             //that represent the square whose left corer is vertex[i]
                             //should be display or not
+        
+        //return (i,j) s.a. x = cameraCenter.x - seaWidth/2 + i*seaWidth/wave_resolution
+        //and z = cameraCenter.z - seaWidth/2 + j*seaWidth/wave_resolution
+        void getGridPositionRelativeToCamera(glm::vec3 pos, glm::vec3 cameraCenter, int* i, int*j);
+        void updateTriangles(glm::vec3 cameraCenter);
 
         //wave parameters
         const int wave_resolution = 10; 
+        const float width_step = seaWidth/wave_resolution;
         const float height_variance = 0.15f;//0.15f;//0.15f; 
         const float waveOmega = 1.5f; //pulse
         const glm::vec2 waveVector = -glm::vec2(1.0, 1.0); //wave vector
@@ -72,10 +83,12 @@ class Scene {
         float waveFunction(float x, float y, float t);
 
         //spring properties
-        const float springConstantMean = 2.0;
-        const float springConstantVariance = 1.0;//1.0;
+        const float springConstantMean = 2.0;//2.0;
+        const float springConstantVariance = 1.0;//1.0;//1.0;
         std::vector<float> springConstants; 
         float l0 = 0.0f;
+
+
       
 };
 

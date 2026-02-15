@@ -63,6 +63,7 @@ int gWindowWidth = 1024;
 int gWindowHeight = 768;
 bool gRecordVideo = false;
 int gSavedCnt = 0;
+bool animationPaused = false;
 
 // GPU objects
 GLuint g_program = 0; // A GPU program contains at least a vertex shader and a fragment shader
@@ -255,7 +256,7 @@ public:
 
 private:
   const float move_angle_step = 1;
-  const float move_step = 10;
+  const float move_step = 3;
   const float min_distance_to_center = 1;
 
   glm::vec3 m_pos = glm::vec3(0, 0, -1);
@@ -332,7 +333,13 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
   } else if(action == GLFW_PRESS && key == GLFW_KEY_R) {
     gRecordVideo = !gRecordVideo;
     std::cout<<"toggle video record\n"<<std::endl;
+  } else if(action == GLFW_PRESS && key == GLFW_KEY_P) {
+    scene.printHelp(g_camera.getCenter());
+    animationPaused = !animationPaused;
   }
+
+  
+
 
   else if(action == GLFW_PRESS && (key == GLFW_KEY_RIGHT)){
     key_right_pressed = true;
@@ -698,6 +705,19 @@ void render() {
             bufferData.data(), GL_DYNAMIC_READ);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, g_vertexSbo);
 
+  //update triangle buffer
+  std::vector<uint> uintBufferData;
+  getDataFromUvec3Vector(scene.triangleIndices, uintBufferData);
+  bufferSize = sizeof(uint)*uintBufferData.size();
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_triangleSbo);
+  // glBufferStorage(
+  //           GL_SHADER_STORAGE_BUFFER, bufferSize, 
+  //           scene.triangleIndices.data(), GL_DYNAMIC_STORAGE_BIT);
+  glBufferData(
+            GL_SHADER_STORAGE_BUFFER, bufferSize, 
+            uintBufferData.data(), GL_DYNAMIC_READ);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, g_triangleSbo);
+
   //Camera informations
   float half_height = tan(glm::radians(g_camera.getFov())/2.0f);
   float half_width = half_height*g_camera.getAspectRatio();
@@ -740,8 +760,9 @@ void render() {
 void update(const float delta) {
 
   //SCENE
-  
-  scene.update(delta, g_camera.getCenter());
+  if(!animationPaused){
+    scene.update(delta, g_camera.getCenter());
+  }
 
   //CAMERA
   
