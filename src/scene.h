@@ -74,9 +74,9 @@ class Scene {
         void updateTriangles(glm::vec3 cameraCenter);
 
         //wave parameters
-        const int wave_resolution = 10; 
+        const int wave_resolution = 20; //10;
         const float width_step = seaWidth/wave_resolution;
-        const float height_variance = 0.15f;//0.15f;//0.15f; 
+        const float height_variance = 0.1f;//0.15f;
         const float waveOmega = 1.5f; //pulse
         const glm::vec2 waveVector = -glm::vec2(1.0, 1.0); //wave vector
         const float waveAmplitude = 0.18f;

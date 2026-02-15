@@ -27,7 +27,7 @@
 
 //this macro tells us where to place the camera
 //if it is not define, we'll see the whole sea square afar
-//#define _CLOSE_VIEW 
+#define _CLOSE_VIEW 
 
 
 
