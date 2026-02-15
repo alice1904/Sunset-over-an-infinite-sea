@@ -28,6 +28,8 @@
 //this macro tells us where to place the camera
 //if it is not define, we'll see the whole sea square afar
 #define _CLOSE_VIEW 
+//this macro tells us where the sun is (in front of you or in your back)
+//#define _NIGHT
 
 
 
@@ -737,8 +739,13 @@ void render() {
   //scene
   glUniform1i(glGetUniformLocation(g_program, "n_triangles"), scene.triangleIndices.size());
   glUniform1i(glGetUniformLocation(g_program, "n_objects"), scene.objectProperties.size());
+  #ifdef _NIGHT
+  glUniform3fv(glGetUniformLocation(g_program, "lightDirection"),1,  glm::value_ptr(glm::normalize(glm::vec3(0.0, 0.0, -1.0))));
+  #else 
   glUniform3fv(glGetUniformLocation(g_program, "lightDirection"),1,  glm::value_ptr(glm::normalize(glm::vec3(0.0, 0.0, 1.0))));
 
+  #endif
+  
   //camera
   glUniform3fv(glGetUniformLocation(g_program, "camera_position"), 1, glm::value_ptr(g_camera.getPosition()));
   glUniform3fv(glGetUniformLocation(g_program, "forward"), 1, glm::value_ptr(g_camera.getForward()));
