@@ -25,6 +25,11 @@
 
 #define _USE_MATH_DEFINES
 
+//this macro tells us where to place the camera
+//if it is not define, we'll see the whole sea square afar
+//#define _CLOSE_VIEW 
+
+
 
 //#include <glad/gl.h>
 #include <glad/glad.h>
@@ -462,7 +467,13 @@ void initGPUprogram() {
 void initCamera() {
   int width, height;
   glfwGetWindowSize(g_window, &width, &height);//0.5
-  g_camera.init(glm::vec3(0.0, 1.0, -3.0), glm::vec3(0.0, 0.5, 0.0), glm::vec3(0.0, 1.0, 0.0)); //height : 1.1//0.8
+
+  #ifdef _CLOSE_VIEW
+  g_camera.init(glm::vec3(0.0, 1.0, -3.0), glm::vec3(0.0, 0.5, 0.0), glm::vec3(0.0, 1.0, 0.0)); 
+  #else
+  g_camera.init(glm::vec3(0.0, 5.5, -10.5), glm::vec3(0.0, 0.5, 0.0), glm::vec3(0.0, 1.0, 0.0)); 
+  #endif
+  
   g_camera.setAspectRatio(static_cast<float>(width)/static_cast<float>(height));
   g_camera.setNear(0.1);
   g_camera.setFar(80.1);
