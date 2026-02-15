@@ -69,6 +69,7 @@ int gWindowHeight = 768;
 bool gRecordVideo = false;
 int gSavedCnt = 0;
 bool animationPaused = false;
+const float fps = 30;
 
 // GPU objects
 GLuint g_program = 0; // A GPU program contains at least a vertex shader and a fragment shader
@@ -772,7 +773,8 @@ void update(const float delta) {
 
   //SCENE
   if(!animationPaused){
-    scene.update(delta, g_camera.getCenter());
+    float dt = 1/fps; //fix dt to avoid strange physics
+    scene.update(dt, g_camera.getCenter());
   }
 
   //CAMERA

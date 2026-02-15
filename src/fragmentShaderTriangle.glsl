@@ -81,7 +81,7 @@ struct rayInformation {
 	int objectIndex;
 };
 
-const int rayTreeSize = int(pow(2, RECURSION_DEPTH+1))-1;
+const int rayTreeSize = 2<<RECURSION_DEPTH - 1; //2^(RECURSION_DEPTH+1) -1
 rayInformation rayTree[rayTreeSize];
 
 int getLeftSonIndex(int i){
