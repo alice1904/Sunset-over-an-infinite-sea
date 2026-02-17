@@ -42,9 +42,9 @@ layout(std430, binding = 2) buffer scenetriangleIndices {
 
 
 
-layout(std430, binding = 3) buffer sceneVertexNormals{
-	vec3[] vertexNormals;
-};
+// layout(std430, binding = 3) buffer sceneVertexNormals{
+// 	vec3[] vertexNormals;
+// };
 
 
 

@@ -581,18 +581,18 @@ void initGPUstorageBuffer(){
             uintBufferData.data(), GL_DYNAMIC_READ);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, g_triangleSbo);
 
-  getDataFromVec3Vector(scene.vertexNormals, bufferData);
-  bufferSize = sizeof(float)*bufferData.size();
-  std::cout<<"buffer size : "<<bufferSize<<std::endl;
-  glCreateBuffers(1, &g_vertexNormalsSbo);
-  glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_vertexNormalsSbo);
-  // glBufferStorage(
+  // getDataFromVec3Vector(scene.vertexNormals, bufferData);
+  // bufferSize = sizeof(float)*bufferData.size();
+  // std::cout<<"buffer size : "<<bufferSize<<std::endl;
+  // glCreateBuffers(1, &g_vertexNormalsSbo);
+  // glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_vertexNormalsSbo);
+  // // glBufferStorage(
+  // //           GL_SHADER_STORAGE_BUFFER, bufferSize, 
+  // //           scene.vertexPositions.data(), GL_DYNAMIC_STORAGE_BIT);
+  // glBufferData(
   //           GL_SHADER_STORAGE_BUFFER, bufferSize, 
-  //           scene.vertexPositions.data(), GL_DYNAMIC_STORAGE_BIT);
-  glBufferData(
-            GL_SHADER_STORAGE_BUFFER, bufferSize, 
-            bufferData.data(), GL_DYNAMIC_READ);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, g_vertexNormalsSbo);
+  //           bufferData.data(), GL_DYNAMIC_READ);
+  // glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, g_vertexNormalsSbo);
 
 
 }
