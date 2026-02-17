@@ -149,7 +149,6 @@ void Scene::init(glm::vec3 cameraCenter){
 
 // UPDATE
 
-
 void Scene::getGridPositionRelativeToCamera(glm::vec3 pos, glm::vec3 cameraCenter, int* i, int*j){
     float halfWIdth = seaWidth/2;
     *i = getRoundInt((pos.x - cameraCenter.x + halfWIdth)/width_step);
@@ -162,11 +161,10 @@ float Scene::waveFunction(float x, float y, float t){
 }
 
 void Scene::update(float dt, glm::vec3 cameraCenter){
-
     currentTime+=dt; //time since simulation started
     for(int vertexIndex=0; vertexIndex<vertexPositions.size(); vertexIndex++){
 
-        //infinite sea
+        //infinite sea : moving vertices
         int i,j;
         getGridPositionRelativeToCamera(vertexRelativePositions[vertexIndex], cameraCenter, &i, &j);
         int new_i, new_j;
@@ -182,6 +180,7 @@ void Scene::update(float dt, glm::vec3 cameraCenter){
             }
         }
 
+        //infinite sea : updating triangles
         bool shouldBeDisplayed = true;
         if(new_i==wave_resolution || new_j==wave_resolution){
             shouldBeDisplayed = false;
@@ -193,8 +192,6 @@ void Scene::update(float dt, glm::vec3 cameraCenter){
         squareInfos[vertexIndex].shouldBeDisplayed = shouldBeDisplayed;
         squareInfos[vertexIndex].hasChanged = true;
 
-
-
         //spring force
         glm::vec3 direction = glm::vec3(0.0, vertexRelativePositions[vertexIndex].y, 0.0);
         float length = glm::length(direction);
@@ -202,13 +199,12 @@ void Scene::update(float dt, glm::vec3 cameraCenter){
             direction = glm::normalize(direction);
         }
         float k = springConstants[vertexIndex];
-        glm::vec3 acc = -k*(length - l0)*direction; //we ignore the mass which is included in k
+        glm::vec3 acc = -k*(length)*direction; //we ignore the mass which is included in k
         vertexVelocities[vertexIndex] += dt*acc;
         vertexRelativePositions[vertexIndex] += dt*vertexVelocities[vertexIndex];
 
         //general wave offset
         float x = vertexRelativePositions[vertexIndex].x;
-        float y = vertexRelativePositions[vertexIndex].y;
         float z = vertexRelativePositions[vertexIndex].z;
         float offset = waveFunction(x, z, currentTime);
 

@@ -1,23 +1,5 @@
-// ----------------------------------------------------------------------------
-// main.cpp
-//
-//  Created on: 24 Jul 2020
-//      Author: Kiwon Um
-//        Mail: kiwon.um@telecom-paris.fr
-//
-// Description: IGR201 Practical; OpenGL and Shaders (DO NOT distribute!)
-//
-// Copyright 2020-2025 Kiwon Um
-//
-// The copyright to the computer program(s) herein is the property of Kiwon Um,
-// Telecom Paris, France. The program(s) may be used and/or copied only with
-// the written permission of Kiwon Um or in accordance with the terms and
-// conditions stipulated in the agreement/contract under which the program(s)
-// have been supplied.
-// ----------------------------------------------------------------------------
-
-//to make video : 
-//  start simu and press r
+//to make a video : 
+//  start simulation and press r
 //  frame will be stored as images in the screenshots/videos folder
 //  run the folowing commands : 
 //    ffmpeg -framerate 30 -i videos/s%04d.tga -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -c:v libx264 -pix_fmt yuv420p output.mp4
@@ -57,12 +39,6 @@
 #include "stb_image.h"
 #include "scene.h"
 
-// constants
-// const static float kSizeSun = 1;
-// const static float kSizeEarth = 0.5;
-// const static float kSizeMoon = 0.25;
-// const static float kRadOrbitEarth = 10;
-// const static float kRadOrbitMoon = 2;
 
 // Window parameters
 GLFWwindow *g_window = nullptr;
@@ -103,10 +79,10 @@ Scene scene = Scene();
 
 
 
+// CAMERA
+
 class Camera {
 public:
-
-  //TODO : impélemente key event to move the camera!
 
   void init(const glm::vec3 &pos, const glm::vec3 &center, const glm::vec3 &up){
     if(glm::dot(up, up)==0 || glm::dot(center-pos, center-pos)==0){
@@ -253,7 +229,6 @@ private:
     m_up = glm::normalize(glm::cross(m_right, m_forward));
   }
 
-
   float m_fov = 45.f;        // Field of view, in degrees
   float m_aspectRatio = 1.f; // Ratio between the width and the height of the image
   float m_near = 0.1f; // Distance before which geometry is excluded from the rasterization process
@@ -263,26 +238,7 @@ Camera g_camera;
 
 
 
-
-GLuint loadTextureFromFileToGPU(const std::string &filename) {
-  // Loading the image in CPU memory using stb_image
-  int width, height, numComponents;
-  unsigned char *data = stbi_load(filename.c_str(), &width, &height, &numComponents, 0);
-  GLuint texID; // OpenGL texture identifier
-  glGenTextures(1, &texID); // generate an OpenGL texture container
-  glBindTexture(GL_TEXTURE_2D, texID); // activate the texture
-  // Setup the texture filtering option and repeat mode; check www.opengl.org for details.
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  // Fill the GPU texture with the data stored in the CPU image
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-  // Free useless CPU memory
-  stbi_image_free(data);
-  glBindTexture(GL_TEXTURE_2D, 0); // unbind the texture
-  return texID;
-}
+//GLFW FUNCTIONS
 
 // Executed each time the window is resized. Adjust the aspect ratio and the rendering viewport to the current window.
 void windowSizeCallback(GLFWwindow* window, int width, int height) {
@@ -306,9 +262,6 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
   } else if(action == GLFW_PRESS && key == GLFW_KEY_P) {
     animationPaused = !animationPaused;
   }
-
-  
-
 
   else if(action == GLFW_PRESS && (key == GLFW_KEY_RIGHT)){
     key_right_pressed = true;

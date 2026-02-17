@@ -57,7 +57,7 @@ class Scene {
         float currentTime = 0.0;
         const float seaWidth = 8.f; //the sea is a square of side seaWidth
         std::vector<glm::vec3> vertexVelocities;
-        std::vector<glm::vec3> vertexRelativePositions; //position relative to the point on the cosinus
+        std::vector<glm::vec3> vertexRelativePositions; //position before adding the cosine component of the height
         int getVertexIndex(int i ,int j); //get vertexIndex from its position in the 2D array 
 
 
@@ -85,7 +85,6 @@ class Scene {
         const float springConstantMean = 2.0;//2.0;
         const float springConstantVariance = 1.0;//1.0;//1.0;
         std::vector<float> springConstants; 
-        float l0 = 0.0f;
 
 
         //infinite wave
