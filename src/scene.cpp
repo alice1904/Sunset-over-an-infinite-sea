@@ -8,31 +8,6 @@ void printUvec3(glm::uvec3 v){
     std::cout<<v.x<<" "<<v.y<<" "<<v.z<<std::endl;
 }
 
-void Scene::printHelp(glm::vec3 cameraCenter){
-            std::cout<<"*****************************\n";
-            printVec3(cameraCenter);
-            for(int vertexIndex=0; vertexIndex<vertexRelativePositions.size(); vertexIndex++){
-                int i, j;
-                getGridPositionRelativeToCamera(vertexRelativePositions[vertexIndex], cameraCenter, &i, &j);
-
-                assert(i<=wave_resolution && j<=wave_resolution);
-                std::cout<<vertexIndex<<" | ";
-                std::cout<<vertexIndex/(wave_resolution+1)<<" "<<vertexIndex%(wave_resolution+1);
-                std::cout<<" : "<<i<<" "<<j<<" "<<squareInfos[vertexIndex].shouldBeDisplayed<<std::endl;
-                printVec3(vertexRelativePositions[vertexIndex]);
-                if(squareInfos[vertexIndex].shouldBeDisplayed){
-                    assert(i<wave_resolution && j<wave_resolution);
-                }
-            
-                
-            }
-
-            std::cout<<"**********triangles*******\n";
-            for(int i=0; i<triangleIndices.size(); i++){
-                printVec3(triangleIndices[i]);
-            }
-        }
-
 int getModulo(int a, int b){
     // return c s.a. a = c[b]
     // and c€[0, b-1]
@@ -163,7 +138,6 @@ int getRoundInt(float x){
 
 void Scene::getGridPositionRelativeToCamera(glm::vec3 pos, glm::vec3 cameraCenter, int* i, int*j){
     float halfWIdth = seaWidth/2;
-
     *i = getRoundInt((pos.x - cameraCenter.x + halfWIdth)/width_step);
     *j = getRoundInt((pos.z - cameraCenter.z + halfWIdth)/width_step);
 }

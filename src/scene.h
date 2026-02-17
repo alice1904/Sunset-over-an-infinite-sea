@@ -4,10 +4,8 @@
 #include <glm/glm.hpp>
 
 #include <stdio.h>
-
-#include <vector>
-
 #include <stdint.h>
+#include <vector>
 #include <iostream>
 #include <cstdlib> //for random values
 
@@ -19,10 +17,9 @@ typedef struct  {
     bool hasChanged;
 } SquareInfo; 
 
-struct ObjectProperties_struct {
+typedef struct {
     //alignement set to 4 float for the vec3 in glsl
     glm::vec3 color;
-    //float shininess;
     int32_t endIndex; //it works without uint32_t, but just to be sure it is 4 bytes...
 
     float diffuseRatio;
@@ -31,7 +28,11 @@ struct ObjectProperties_struct {
     float refractionRatio;
 
     //eventually : shininess, refraction indice ?
-}; typedef struct ObjectProperties_struct ObjectProperties;
+} ObjectProperties;
+
+
+
+
 
 class Scene {
 
@@ -41,9 +42,7 @@ class Scene {
 
         //init the geometry
         void init(glm::vec3 cameraCenter);
-
-
-        void printHelp(glm::vec3 cameraCenter);
+        //void printHelp(glm::vec3 cameraCenter);
 
         //compute the forces, 
         //the new state vector 
@@ -52,8 +51,6 @@ class Scene {
 
         std::vector<glm::vec3> vertexPositions;
         std::vector<glm::uvec3> triangleIndices;
-        std::vector<glm::vec3> vertexNormals;
-
         std::vector<ObjectProperties> objectProperties;
 
     private:
@@ -61,38 +58,28 @@ class Scene {
         const float seaWidth = 8.f; //the sea is a square of side seaWidth
         std::vector<glm::vec3> vertexVelocities;
         std::vector<glm::vec3> vertexRelativePositions; //position relative to the point on the cosinus
-        
-        int getVertexIndex(int i ,int j);
+        int getVertexIndex(int i ,int j); //get vertexIndex from its position in the 2D array 
 
-        //infinite wave
-        std::vector<SquareInfo> squareInfos; //tells wether the couple of triangle 
-                            //that represent the square whose left corer is vertex[i]
-                            //should be display or not
-        
-        //return (i,j) s.a. x = cameraCenter.x - seaWidth/2 + i*seaWidth/wave_resolution
-        //and z = cameraCenter.z - seaWidth/2 + j*seaWidth/wave_resolution
-        void getGridPositionRelativeToCamera(glm::vec3 pos, glm::vec3 cameraCenter, int* i, int*j);
-        void updateTriangles(glm::vec3 cameraCenter);
 
         //wave parameters
         #ifdef _HIGH_RESOLUTION
-
-        const int wave_resolution = 20; //10;
+        const int wave_resolution = 20; 
         const float width_step = seaWidth/wave_resolution;
-        const float height_variance = 0.1f;//0.15f;
+        const float height_variance = 0.1f;
         const float waveOmega = 1.5f; //pulse
         const glm::vec2 waveVector = -glm::vec2(1.0, 1.0); //wave vector
         const float waveAmplitude = 0.18f;
         float waveFunction(float x, float y, float t);
         #else 
-        const int wave_resolution = 10; //10;
+        const int wave_resolution = 10;
         const float width_step = seaWidth/wave_resolution;
-        const float height_variance = 0.15f;//0.15f;
+        const float height_variance = 0.15f;
         const float waveOmega = 1.5f; //pulse
         const glm::vec2 waveVector = -glm::vec2(1.0, 1.0); //wave vector
         const float waveAmplitude = 0.18f;
         float waveFunction(float x, float y, float t);
         #endif
+
 
         //spring properties
         const float springConstantMean = 2.0;//2.0;
@@ -101,7 +88,12 @@ class Scene {
         float l0 = 0.0f;
 
 
-      
+        //infinite wave
+        std::vector<SquareInfo> squareInfos; //tells wether the couple of triangle 
+                            //that represent the square whose left corer is vertex[i]
+                            //should be display or not
+        void getGridPositionRelativeToCamera(glm::vec3 pos, glm::vec3 cameraCenter, int* i, int*j);
+        void updateTriangles(glm::vec3 cameraCenter);
 };
 
 #endif

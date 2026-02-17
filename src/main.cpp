@@ -304,7 +304,6 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
     gRecordVideo = !gRecordVideo;
     std::cout<<"toggle video record\n"<<std::endl;
   } else if(action == GLFW_PRESS && key == GLFW_KEY_P) {
-    scene.printHelp(g_camera.getCenter());
     animationPaused = !animationPaused;
   }
 
