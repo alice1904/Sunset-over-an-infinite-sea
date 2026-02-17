@@ -1,6 +1,6 @@
 #include "scene.h"
 
-
+#define USE_OPENMP
 
 // GENERAL USE FUNCTIONS AND VARIABLES
 
@@ -59,10 +59,15 @@ int Scene::getVertexIndex(int i ,int j){
 }
 
 void Scene::updateTriangles(){
-    int vertexIndex = 0;
+    #ifdef USE_OPENMP
+    #pragma omp parallel for
+    #endif
     for(int i=0; i<=wave_resolution; i++){
+        #ifdef USE_OPENMP
+        #pragma omp parallel for
+        #endif
         for(int j=0; j<=wave_resolution; j++){
-            //vertexIndex = j + i*(wave_resolution+1)
+            int vertexIndex = j + i*(wave_resolution+1);
             if(squareInfos[vertexIndex].hasChanged){
                 squareInfos[vertexIndex].hasChanged = false;
                 if(squareInfos[vertexIndex].shouldBeDisplayed){
@@ -79,7 +84,6 @@ void Scene::updateTriangles(){
                     triangleIndices[vertexIndex*2] = glm::uvec3(0, 0, 0);
                     triangleIndices[vertexIndex*2+1] = glm::uvec3(0, 0, 0);
                 }
-                vertexIndex+=1;
             }
         }
     }
@@ -162,6 +166,10 @@ float Scene::waveFunction(float x, float y, float t){
 
 void Scene::update(float dt, glm::vec3 cameraCenter){
     currentTime+=dt; //time since simulation started
+
+    #ifdef USE_OPENMP
+    #pragma omp parallel for
+    #endif
     for(int vertexIndex=0; vertexIndex<vertexPositions.size(); vertexIndex++){
 
         //infinite sea : moving vertices

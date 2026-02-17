@@ -7,10 +7,11 @@
 
 #define _USE_MATH_DEFINES
 
+
+  // MACROS
 //this macro tells us where to place the camera
 //if it is not define, we'll see the whole sea square afar
 #define _CLOSE_VIEW 
-//this macro tells us where the sun is (in front of you or in your back)
 //#define _NIGHT
 
 
@@ -46,7 +47,7 @@ int gWindowHeight = 768;
 bool gRecordVideo = false;
 int gSavedCnt = 0;
 bool animationPaused = false;
-const float fps = 30;
+
 
 // GPU objects
 GLuint g_program = 0; // A GPU program contains at least a vertex shader and a fragment shader
@@ -72,6 +73,15 @@ bool key_left_pressed = false;
 bool key_up_pressed = false;
 bool key_down_pressed = false;
 bool key_shift_pressed = false;
+
+// Other global variables
+const float fps = 30;
+const float move_angle_step = 1; //step to rotate the light
+#ifdef _NIGHT
+glm::vec3 lightDirection = glm::vec3(0.0, 0.0, -1.0);
+#else 
+glm::vec3 lightDirection = glm::vec3(0.0, 0.0, 1.0);
+#endif
 
 //Scene
 Scene g_scene = Scene();
@@ -391,6 +401,22 @@ void clear() {
 
 
 
+// LIGHT
+
+void rotate_light_left(float delta){
+  //rotate light to left
+  glm::vec3 up = glm::vec3(0.0, 1.0, 0.0);
+  lightDirection = glm::rotate(lightDirection, delta*move_angle_step, up);
+}
+
+void rotate_light_right(float delta){
+  //rotate light to right
+  glm::vec3 up = glm::vec3(0.0, 1.0, 0.0);
+  lightDirection = glm::rotate(lightDirection, -delta*move_angle_step, up);
+}
+
+
+
 // RENDER
 
 void savePicture(){
@@ -437,9 +463,9 @@ void render() {
   glUniform1i(glGetUniformLocation(g_program, "n_triangles"), g_scene.triangleIndices.size());
   glUniform1i(glGetUniformLocation(g_program, "n_objects"), g_scene.objectProperties.size());
   #ifdef _NIGHT
-  glUniform3fv(glGetUniformLocation(g_program, "lightDirection"),1,  glm::value_ptr(glm::normalize(glm::vec3(0.0, 0.0, -1.0))));
+  glUniform3fv(glGetUniformLocation(g_program, "lightDirection"),1,  glm::value_ptr(glm::normalize(lightDirection)));
   #else 
-  glUniform3fv(glGetUniformLocation(g_program, "lightDirection"),1,  glm::value_ptr(glm::normalize(glm::vec3(0.0, 0.0, 1.0))));//0.9, 0.0, -1.0
+  glUniform3fv(glGetUniformLocation(g_program, "lightDirection"),1,  glm::value_ptr(glm::normalize(lightDirection)));//0.9, 0.0, -1.0
   #endif
   
   //camera informations
@@ -473,6 +499,18 @@ void update(const float delta) {
     float dt = 1/fps; //fix dt to avoid strange physics
     g_scene.update(dt, g_camera.getCenter());
   }
+
+
+  //LIGHT
+  if(key_shift_pressed){
+    if(key_right_pressed){
+      rotate_light_right(delta);
+    }
+    else if (key_left_pressed){
+      rotate_light_left(delta);
+    }
+  }
+
 
   //CAMERA
   if(key_shift_pressed){

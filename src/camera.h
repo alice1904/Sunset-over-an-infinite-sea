@@ -44,7 +44,7 @@ public:
 
   void move_up(float delta){
     //change the position
-    m_pos = m_center + glm::rotate(m_pos-m_center, -delta*move_angle_step, m_right); //rotate m_pos around up axis
+    m_pos = m_center + glm::rotate(m_pos-m_center, -delta*move_angle_step, m_right); //rotate m_pos around right axis
     //update the directions
     updateForward();
     updateUpFromRight();
@@ -52,7 +52,7 @@ public:
 
   void move_down(float delta){
     //change the position
-    m_pos = m_center + glm::rotate(m_pos-m_center, delta*move_angle_step, m_right); //rotate m_pos around up axis
+    m_pos = m_center + glm::rotate(m_pos-m_center, delta*move_angle_step, m_right); //rotate m_pos around right axis
     //update the directions
     updateForward();
     updateUpFromRight();
