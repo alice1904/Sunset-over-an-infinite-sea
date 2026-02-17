@@ -2,7 +2,7 @@
 
 ## CONTENTS
 
-The code to build the project is in the src folder. Little information about the available functionalities can be found in this document below. You will find also a report (made with Latex) in PDF format, a video presenting the project and the PDF of the slides I used for my presentation. As the path is just as important as the destination, I found it interesting to keep a record of the bug I found and fixed, which is available in the bug_report.md file. Finally, you'll find some pictures and videos of the project in the screenshot folder.
+The code to build the project is in the src folder. Little information about the available functionalities can be found in this document below. You will find also a report (made with Latex) in PDF format, a video presenting the project and the PDF of the slides I used for my presentation. As the path is just as important as the destination, I found it interesting to keep a record of the bugs I found and fixed, which is available in the bug_report.md file. Finally, you'll find some pictures and videos of the project in the screenshot folder.
 
 
 ## FUNCTIONALITIES OF THE PROJECT
