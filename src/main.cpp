@@ -38,6 +38,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "scene.h"
+#include "camera.h"
 
 
 // Window parameters
@@ -75,166 +76,10 @@ bool key_down_pressed = false;
 bool key_shift_pressed = false;
 
 //Scene
-Scene scene = Scene();
+Scene g_scene = Scene();
 
-
-
-// CAMERA
-
-class Camera {
-public:
-
-  void init(const glm::vec3 &pos, const glm::vec3 &center, const glm::vec3 &up){
-    if(glm::dot(up, up)==0 || glm::dot(center-pos, center-pos)==0){
-      std::cerr << "ERROR: Failed to init Camera due to not allowed arguments" << std::endl;
-      glfwTerminate();
-      std::exit(EXIT_FAILURE);
-    }
-    
-    m_pos = pos;
-    m_center = center;
-
-    m_forward = normalize(center - pos);
-    m_right = normalize(cross(m_forward, up));
-    m_up = normalize(cross(m_right, m_forward));
-  }
-
-  inline float getFov() const { return m_fov; }
-  inline void setFoV(const float f) { m_fov = f; }
-  inline float getAspectRatio() const { return m_aspectRatio; }
-  inline void setAspectRatio(const float a) { m_aspectRatio = a; }
-  inline float getNear() const { return m_near; }
-  inline void setNear(const float n) { m_near = n; }
-  inline float getFar() const { return m_far; }
-  inline void setFar(const float n) { m_far = n; }
-  inline glm::vec3 getPosition() { return m_pos; }
-  inline glm::vec3 getCenter() { return m_center; }
-  inline glm::vec3 getForward() {return m_forward;}
-  inline glm::vec3 getRight() {return m_right;}
-  inline glm::vec3 getUp() {return m_up;}
-
-  inline glm::mat4 computeViewMatrix() const {
-    return glm::lookAt(m_pos, m_center, m_up);
-  }
-
-  // Returns the projection matrix stemming from the camera intrinsic parameter.
-  inline glm::mat4 computeProjectionMatrix() const {
-    return glm::perspective(glm::radians(m_fov), m_aspectRatio, m_near, m_far);
-  }
-
-
-  //move the camera
-
-  void move_right(float delta){
-    //change the position
-    //m_pos = m_center + glm::rotate(m_pos-m_center, delta*move_angle_step, m_up); //rotate m_pos around up axis
-    
-    glm::vec3 right = glm::vec3(-1.0, 0.0, 0.0);
-    m_pos =  m_pos + delta*move_step*right;
-    m_center = m_center + delta*move_step*right;
-    //update the directions
-    updateForward();
-    updateRightFromUp();
-  }
-
-  void move_left(float delta){
-    //change the position
-    //m_pos = m_center + glm::rotate(m_pos-m_center, -delta*move_angle_step, m_up); //rotate m_pos around up axis
-    
-    glm::vec3 right = glm::vec3(-1.0, 0.0, 0.0);
-    m_pos =  m_pos - delta*move_step*right;
-    m_center = m_center - delta*move_step*right;
-    //update the directions
-    updateForward();
-    updateRightFromUp();
-  }
-
-  void move_up(float delta){
-    //change the position
-    m_pos = m_center + glm::rotate(m_pos-m_center, -delta*move_angle_step, m_right); //rotate m_pos around up axis
-    //update the directions
-    updateForward();
-    updateUpFromRight();
-  }
-
-  void move_down(float delta){
-    //change the position
-    m_pos = m_center + glm::rotate(m_pos-m_center, delta*move_angle_step, m_right); //rotate m_pos around up axis
-    //update the directions
-    updateForward();
-    updateUpFromRight();
-  }
-
-  void move_forward(float delta){
-    //glm::vec3 pos = m_pos + delta*move_step*m_forward;
-    //if pos is too close to the center or is on the other side of the center, 
-    //we don't update m_pos
-    // if(glm::dot(m_center-pos, m_forward) >= min_distance_to_center){
-    //   m_pos = pos;
-    // }
-    glm::vec3 forward = glm::vec3(0.0, 0.0, 1.0);
-    m_pos =  m_pos + delta*move_step*forward;
-    m_center =  m_center + delta*move_step*forward;
-  }
-
-  void move_backward(float delta){
-    glm::vec3 forward = glm::vec3(0.0, 0.0, 1.0);
-    m_pos = m_pos - delta*move_step*forward;
-    m_center =  m_center - delta*move_step*forward;
-  }
-
-  void rotate_right(float delta){
-    //change the direction
-    //we use (0, 1, 0) instead of up to look down
-    printf("%f, %f, %f, \n", m_forward.x, m_forward.y, m_forward.z);
-    m_forward = glm::rotate(m_forward, -delta*move_angle_step, glm::vec3(0, 1, 0));
-    m_center = m_pos + m_forward;
-    updateRightFromUp();
-  }
-
-  void rotate_left(float delta){
-    //change the direction
-    m_forward = glm::rotate(m_forward, delta*move_angle_step, glm::vec3(0, 1, 0));
-    m_center = m_pos + m_forward;
-    updateRightFromUp();
-  }
-
-
-private:
-  const float move_angle_step = 1;
-  const float move_step = 3;
-  const float min_distance_to_center = 1;
-
-  glm::vec3 m_pos = glm::vec3(0, 0, -1);
-  glm::vec3 m_center = glm::vec3(0, 0, 0);
-  glm::vec3 m_up = glm::vec3(0, 1, 0);
-  glm::vec3 m_right = glm::vec3(1, 0, 0);
-  glm::vec3 m_forward = glm::vec3(0, 0, 1);
-
-
-  inline void setPosition(const glm::vec3 &p) { m_pos = p; }
-
-  inline void updateForward(){
-    //update the forward vec3
-    m_forward = glm::normalize(m_center-m_pos);
-  }
-
-  inline void updateRightFromUp(){
-    //update the right vec3 from forward and up vec3
-    m_right = glm::normalize(glm::cross(m_forward, m_up));
-  }
-
-  inline void updateUpFromRight(){
-    //update the up vec3 from forward and right vec3
-    m_up = glm::normalize(glm::cross(m_right, m_forward));
-  }
-
-  float m_fov = 45.f;        // Field of view, in degrees
-  float m_aspectRatio = 1.f; // Ratio between the width and the height of the image
-  float m_near = 0.1f; // Distance before which geometry is excluded from the rasterization process
-  float m_far = 10.f; // Distance after which the geometry is excluded from the rasterization process
-};
-Camera g_camera;
+//Camera
+Camera g_camera = Camera();
 
 
 
@@ -325,6 +170,10 @@ void initGLFW() {
   glfwSetKeyCallback(g_window, keyCallback);
 }
 
+
+
+// OPENGL FUNCTIONS
+
 void initOpenGL() {
   // Load extensions for modern OpenGL
   if(!gladLoadGL()) { //!gladLoadGL(glfwGetProcAddress)
@@ -371,34 +220,34 @@ void initGPUprogram() {
   loadShader(g_program, GL_VERTEX_SHADER, "../vertexShaderTriangle.glsl");
   loadShader(g_program, GL_FRAGMENT_SHADER, "../fragmentShaderTriangle.glsl");
   glLinkProgram(g_program); // The main GPU program is ready to be handle streams of polygons
-
   glUseProgram(g_program);
-
 }
 
 
+
+// INIT CAMERA AND SCENE
+
 void initCamera() {
   int width, height;
-  glfwGetWindowSize(g_window, &width, &height);//0.5
-
+  glfwGetWindowSize(g_window, &width, &height);
   #ifdef _CLOSE_VIEW
   g_camera.init(glm::vec3(0.0, 1.0, -3.0), glm::vec3(0.0, 0.5, 0.0), glm::vec3(0.0, 1.0, 0.0)); 
   #else
   g_camera.init(glm::vec3(0.0, 5.5, -10.5), glm::vec3(0.0, 0.5, 0.0), glm::vec3(0.0, 1.0, 0.0)); 
   #endif
-  
   g_camera.setAspectRatio(static_cast<float>(width)/static_cast<float>(height));
-  g_camera.setNear(0.1);
-  g_camera.setFar(80.1);
 }
 
 void initScene(){
-  scene.init(g_camera.getCenter());
+  g_scene.init(g_camera.getCenter());
 }
 
-// Define your mesh(es) in the CPU memory
+
+
+// INIT GPU MEMORY
+
 void initCPUgeometry() {
-  // TODO: add vertices and indices for your mesh(es)
+  //2 triangles for the screen
   g_vertexPositions = { // the array of vertex Colors [x0, y0, z0, x1, y1, z1, ...]
     -1.f, -1.f, 0.f,
     -1.f, 1.f, 0.f,
@@ -416,6 +265,7 @@ void initGPUgeometry() {
 #else
   glCreateVertexArrays(1, &g_vao);
 #endif
+
   glBindVertexArray(g_vao);
 
   // Generate a GPU buffer to store the Colors of the vertices
@@ -485,7 +335,8 @@ void initGPUstorageBuffer(){
   std::vector<float> bufferData;
   std::vector<uint> uintBufferData;
 
-  getDataFromVec3Vector(scene.vertexPositions, bufferData);
+  //vertices
+  getDataFromVec3Vector(g_scene.vertexPositions, bufferData);
   bufferSize = sizeof(float)*bufferData.size();
   glCreateBuffers(1, &g_vertexSbo);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_vertexSbo);
@@ -494,23 +345,17 @@ void initGPUstorageBuffer(){
             bufferData.data(), GL_DYNAMIC_READ);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, g_vertexSbo);
 
-
-  
-
-
-
-  
-  bufferSize = sizeof(ObjectProperties)*scene.objectProperties.size();
+  //objectProperties
+  bufferSize = sizeof(ObjectProperties)*g_scene.objectProperties.size();
   glCreateBuffers(1, &g_objectPropertiesSbo);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_objectPropertiesSbo);
   glBufferData(
             GL_SHADER_STORAGE_BUFFER, bufferSize, 
-            scene.objectProperties.data(), GL_DYNAMIC_READ);
+            g_scene.objectProperties.data(), GL_DYNAMIC_READ);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, g_objectPropertiesSbo);
 
-
-
-  getDataFromUvec3Vector(scene.triangleIndices, uintBufferData);
+  //triangles
+  getDataFromUvec3Vector(g_scene.triangleIndices, uintBufferData);
   bufferSize = sizeof(uint)*uintBufferData.size();
   glCreateBuffers(1, &g_triangleSbo);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_triangleSbo);
@@ -528,6 +373,9 @@ void initGPU(){
 }
 
 
+
+// INIT ALL
+
 void init() {
   initGLFW();
   initOpenGL();
@@ -539,16 +387,17 @@ void init() {
 
 void clear() {
   glDeleteProgram(g_program);
-
   glfwDestroyWindow(g_window);
   glfwTerminate();
 }
 
+
+
+// RENDER
+
 void savePicture(){
   std::stringstream fpath;
   fpath <<"../../screenshots/videos/"<< "s" << std::setw(4) << std::setfill('0') << gSavedCnt++ << ".tga";
-
-  //std::cout << "Saving file " << fpath.str() << " ... " << std::flush;
   const short int w = gWindowWidth;
   const short int h = gWindowHeight;
   std::vector<int> buf(w*h*3, 0);
@@ -561,14 +410,14 @@ void savePicture(){
   fclose(out);
 }
 
-// The main rendering call
 void render() {
+  //clear
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Erase the color and z buffers.
 
   //update vertex buffer
   size_t bufferSize;
   std::vector<float> bufferData;
-  getDataFromVec3Vector(scene.vertexPositions, bufferData);
+  getDataFromVec3Vector(g_scene.vertexPositions, bufferData);
   bufferSize = sizeof(float)*bufferData.size();
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_vertexSbo);
   glBufferData(
@@ -578,7 +427,7 @@ void render() {
 
   //update triangle buffer
   std::vector<uint> uintBufferData;
-  getDataFromUvec3Vector(scene.triangleIndices, uintBufferData);
+  getDataFromUvec3Vector(g_scene.triangleIndices, uintBufferData);
   bufferSize = sizeof(uint)*uintBufferData.size();
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_triangleSbo);
   glBufferData(
@@ -586,21 +435,18 @@ void render() {
             uintBufferData.data(), GL_DYNAMIC_READ);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, g_triangleSbo);
 
-  //Camera informations
-  float half_height = tan(glm::radians(g_camera.getFov())/2.0f);
-  float half_width = half_height*g_camera.getAspectRatio();
-
-  //scene
-  glUniform1i(glGetUniformLocation(g_program, "n_triangles"), scene.triangleIndices.size());
-  glUniform1i(glGetUniformLocation(g_program, "n_objects"), scene.objectProperties.size());
+  //Scene informations
+  glUniform1i(glGetUniformLocation(g_program, "n_triangles"), g_scene.triangleIndices.size());
+  glUniform1i(glGetUniformLocation(g_program, "n_objects"), g_scene.objectProperties.size());
   #ifdef _NIGHT
   glUniform3fv(glGetUniformLocation(g_program, "lightDirection"),1,  glm::value_ptr(glm::normalize(glm::vec3(0.0, 0.0, -1.0))));
   #else 
   glUniform3fv(glGetUniformLocation(g_program, "lightDirection"),1,  glm::value_ptr(glm::normalize(glm::vec3(0.0, 0.0, 1.0))));//0.9, 0.0, -1.0
-
   #endif
   
-  //camera
+  //camera informations
+  float half_height = tan(glm::radians(g_camera.getFov())/2.0f);
+  float half_width = half_height*g_camera.getAspectRatio();
   glUniform3fv(glGetUniformLocation(g_program, "camera_position"), 1, glm::value_ptr(g_camera.getPosition()));
   glUniform3fv(glGetUniformLocation(g_program, "forward"), 1, glm::value_ptr(g_camera.getForward()));
   glUniform3fv(glGetUniformLocation(g_program, "up"), 1, glm::value_ptr(g_camera.getUp()));
@@ -608,30 +454,29 @@ void render() {
   glUniform1f(glGetUniformLocation(g_program, "half_height"), half_height);
   glUniform1f(glGetUniformLocation(g_program, "half_width"), half_width);
 
-
+  //call GPU
   glBindVertexArray(g_vao);     // activate the VAO storing geometry data
   glDrawElements(GL_TRIANGLES, g_triangleIndices.size(), GL_UNSIGNED_INT, 0); // Call for rendering: stream the current GPU geometry through the current GPU program
 
-
+  //save the frame
   if(gRecordVideo) {
     savePicture();//save the current frame in the disk
-    
   }
-
-
 }
 
-// Update any accessible variable based on the current time
+
+
+// UPDATE
+
 void update(const float delta) {
 
   //SCENE
   if(!animationPaused){
     float dt = 1/fps; //fix dt to avoid strange physics
-    scene.update(dt, g_camera.getCenter());
+    g_scene.update(dt, g_camera.getCenter());
   }
 
   //CAMERA
-  
   if(key_shift_pressed){
     if(key_right_pressed){
       //g_camera.rotate_right(delta);
@@ -660,15 +505,17 @@ void update(const float delta) {
       g_camera.move_backward(delta);
     }
   }
-
-
 }
+
+
+
+// MAIN
 
 int main(int argc, char ** argv) {
   srand((unsigned int)time(0));
   init(); // Your initialization code (user interface, OpenGL states, scene with geometry, material, lights, etc)
 
-  printf("number of triangles : %ld\n", scene.triangleIndices.size());
+  printf("number of triangles : %ld\n", g_scene.triangleIndices.size());
   float currentTime;
   float lastCurrentTime=static_cast<float>(glfwGetTime());
   while(!glfwWindowShouldClose(g_window)) {
