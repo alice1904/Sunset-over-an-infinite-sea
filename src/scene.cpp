@@ -1,10 +1,10 @@
 #include "scene.h"
 
-void printVec3(glm::vec3 v){
-    std::cout<<v.x<<" "<<v.y<<" "<<v.z<<std::endl;
-}
 
-void printUvec3(glm::uvec3 v){
+
+// GENERAL USE FUNCTIONS AND VARIABLES
+
+void print_vec3(glm::vec3 v){
     std::cout<<v.x<<" "<<v.y<<" "<<v.z<<std::endl;
 }
 
@@ -30,6 +30,21 @@ void testGetModulo(){
     assert(getModulo(-48, 20)==12);
 }
 
+int getRoundInt(float x){
+    if(x>=0){
+        int n = (int) x;
+        if (x-n>0.5){
+            return n+1;
+        }
+        return n;
+    }
+    int n = (int)x;
+    if(n-x>0.5){
+        return n-1;
+    }
+    return n;
+}
+
 int Scene::getVertexIndex(int i ,int j){
     //return the index of the vertex in vertexPosition and vertexRelativePOsitions
     //note : i and j can be <0 or >SIZE
@@ -40,6 +55,9 @@ int Scene::getVertexIndex(int i ,int j){
 }
 
 
+
+// INIT
+
 void Scene::init(glm::vec3 cameraCenter){
     //the sea is set around the point the camera is looking at
     testGetModulo();
@@ -47,8 +65,7 @@ void Scene::init(glm::vec3 cameraCenter){
     
     float halfWidth = seaWidth/2;
     float height = 0.0f;
-    float halfDepth = seaWidth/2; //the sea is a grid of size wave_resolution x wave_resolution
-    
+    float halfDepth = halfWidth; //the sea is a grid of size wave_resolution x wave_resolution
     float depth_step = width_step;
 
 
@@ -57,49 +74,26 @@ void Scene::init(glm::vec3 cameraCenter){
         for(int j=0; j<=wave_resolution; j++){
             float x = cameraCenter.x -halfWidth + i*width_step;
             float z = cameraCenter.z -halfDepth + j*depth_step;
-
             float r = ((double) rand() / (RAND_MAX)); //random number between 0 and 1
             r = r*2 -1; //random number between -1 and 1
             float y = -height + r*height_variance;
-            if(i==1 && j==1){
-                y = +height;
-            }
 
             vertexRelativePositions.push_back(glm::vec3(x, y, z));
-            vertexPositions.push_back(vertexRelativePositions[i]); //it will be update with the cosinus when the 
+            vertexPositions.push_back(glm::vec3(x, y, z)); //it will be update with the cosinus when the 
                                                             //update() function will be called
-
+            
             if(i<wave_resolution && j<wave_resolution){
-                squareInfos.push_back({true, false});
+                squareInfos.push_back({true, true});
             }
             else{
-                squareInfos.push_back({false, false});
+                squareInfos.push_back({false, true});
             }
         }
     }
-
 
     //TRIANGLES
-    int vertexIndex = 0;
-    for(int i=0; i<=wave_resolution; i++){
-        for(int j=0; j<=wave_resolution; j++){
-            if(squareInfos[vertexIndex].shouldBeDisplayed){
-                int a, b, c, d; //indices of the corners of the square
-                a = getVertexIndex(i, j);
-                b = getVertexIndex(i+1, j);
-                c = getVertexIndex(i+1, j+1);
-                d = getVertexIndex(i, j+1);
-                triangleIndices.push_back(glm::uvec3(a, b, c));
-                triangleIndices.push_back(glm::uvec3(a, c, d));
-            }
-            else{
-                //this triangle is a point and will not be visible
-                triangleIndices.push_back(glm::uvec3(0, 0, 0));
-                triangleIndices.push_back(glm::uvec3(0, 0, 0));
-            }
-            vertexIndex+=1;
-        }
-    }
+    triangleIndices.resize(2*vertexPositions.size());
+    updateTriangles(cameraCenter);
 
 
     //OBJECTS
@@ -120,20 +114,7 @@ void Scene::init(glm::vec3 cameraCenter){
 
 }
 
-int getRoundInt(float x){
-    if(x>=0){
-        int n = (int) x;
-        if (x-n>0.5){
-            return n+1;
-        }
-        return n;
-    }
-    int n = (int)x;
-    if(n-x>0.5){
-        return n-1;
-    }
-    return n;
-}
+
 
 
 void Scene::getGridPositionRelativeToCamera(glm::vec3 pos, glm::vec3 cameraCenter, int* i, int*j){
@@ -152,8 +133,8 @@ void Scene::updateTriangles(glm::vec3 cameraCenter){
     for(int i=0; i<=wave_resolution; i++){
         for(int j=0; j<=wave_resolution; j++){
             //vertexIndex = j + i*(wave_resolution+1)
-            // if(squareInfos[vertexIndex].hasChanged){
-            //     squareInfos[vertexIndex].hasChanged = false;
+            if(squareInfos[vertexIndex].hasChanged){
+                squareInfos[vertexIndex].hasChanged = false;
                 if(squareInfos[vertexIndex].shouldBeDisplayed){
                     int a, b, c, d; //indices of the corners of the square
                     a = getVertexIndex(i, j);
@@ -177,7 +158,7 @@ void Scene::updateTriangles(glm::vec3 cameraCenter){
                     triangleIndices[vertexIndex*2+1] = glm::uvec3(0, 0, 0);
                 }
                 vertexIndex+=1;
-            //}
+            }
         }
     }
 }

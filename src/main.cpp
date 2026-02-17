@@ -643,7 +643,7 @@ void render() {
   #ifdef _NIGHT
   glUniform3fv(glGetUniformLocation(g_program, "lightDirection"),1,  glm::value_ptr(glm::normalize(glm::vec3(0.0, 0.0, -1.0))));
   #else 
-  glUniform3fv(glGetUniformLocation(g_program, "lightDirection"),1,  glm::value_ptr(glm::normalize(glm::vec3(0.0, 0.0, -1.0))));//0.9, 0.0, -1.0
+  glUniform3fv(glGetUniformLocation(g_program, "lightDirection"),1,  glm::value_ptr(glm::normalize(glm::vec3(0.0, 0.0, 1.0))));//0.9, 0.0, -1.0
 
   #endif
   
