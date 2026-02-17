@@ -18,7 +18,6 @@ out vec3 non_normalized_ray_direction; //direction from the origin of the camera
                                        //It gives us one ray for each fragment.
 
 void main() {
-        vec4 worldPosition = vec4(vPosition, 1.0);
         gl_Position = vec4(vPosition, 1.0);
 
         non_normalized_ray_direction = forward 

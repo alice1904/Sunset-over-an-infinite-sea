@@ -1,5 +1,7 @@
 #version 430
 
+
+
 // PARAMETERS
 
 #define RECURSION_DEPTH 3
@@ -11,7 +13,6 @@
 
 in vec3 non_normalized_ray_direction;
 out vec4 color;	  // Shader output: the color response attached to this fragment
-
 
 
 struct ObjectProperties {
@@ -38,7 +39,6 @@ layout(std430, binding = 2) buffer scenetriangleIndices {
 };
 
 
-
 uniform int n_triangles;
 uniform int n_objects;
 uniform vec3 lightDirection;
@@ -49,7 +49,7 @@ uniform vec3 camera_position;
 
 // GENERAL USE FUNCTIONS AND VARIABLES
 
-const float epsilon = 0.001f; //0.01f;
+const float epsilon = 0.001f; 
 
 bool float_is_null(float x){
 	return x>-epsilon && x<epsilon;
