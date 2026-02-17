@@ -1,5 +1,4 @@
 #version 430
-//#version 330 core	     // Minimal GL version support expected from the GPU
 
 // PARAMETERS
 
@@ -10,10 +9,9 @@
 
 // INPUTS / OUTPUTS
 
-//ray information
 in vec3 non_normalized_ray_direction;
-
 out vec4 color;	  // Shader output: the color response attached to this fragment
+
 
 
 struct ObjectProperties {
@@ -31,7 +29,6 @@ layout(std430, binding = 0) buffer sceneVertexPositions {
     vec3[] vertexPositions;
 };
 
-
 layout(std430, binding = 1) buffer sceneObjectProperties {
     ObjectProperties[] objectProperties;
 };
@@ -42,18 +39,11 @@ layout(std430, binding = 2) buffer scenetriangleIndices {
 
 
 
-// layout(std430, binding = 3) buffer sceneVertexNormals{
-// 	vec3[] vertexNormals;
-// };
-
-
-
 uniform int n_triangles;
 uniform int n_objects;
 uniform vec3 lightDirection;
-
-//camera information
 uniform vec3 camera_position;
+
 
 
 
@@ -66,6 +56,8 @@ bool float_is_null(float x){
 }
 
 bool ERROR_OCCURED = false;
+
+
 
 
 // RAY TREE REPRESENTATION
@@ -101,6 +93,7 @@ int getFatherIndex(int i){
 	}
 	return i/2;
 }
+
 
 
 
@@ -146,8 +139,8 @@ vec3 getBackgroundColor(vec3 rayDirection){
 
 
 
-// RAY TRACING
 
+// RAY TRACING
 
 int findObjectIndex(int triangleIndex){
 	int objectIndex = 0;
@@ -167,7 +160,6 @@ int findObjectIndex(int triangleIndex){
 	ERROR_OCCURED=true;
 	return 0;
 }
-
 
 bool ray_intersects_triangle(vec3 ray_origin, vec3 ray_direction, vec3 v1, vec3 v2, vec3 v3, out float dist, out float u, out float v){
 	vec3 edge1 = v2 - v1;
@@ -245,15 +237,13 @@ bool find_closest_intersected_triangle(vec3 ray_origin, vec3 ray_direction, out 
 	return triangle_found;
 }
 
-
-
 bool getRayInformation(vec3 ray_origin, vec3 ray_direction, int outputNodeIndex){
 	//return true if a triangle was intersected and false if it went to infinite.
 	//Write the following information in the ray tree node:
 	//		- position of the intersection point
 	//		- reflected ray
 	//		- refracted ray
-	//		- color : the color of the triangle at the point, or color of the background
+	//		- triangleColor : the color of the triangle at the point, or color of the background
 	//		- objectIndex : index of the object the triangle belongs to 
 
 
@@ -277,9 +267,6 @@ bool getRayInformation(vec3 ray_origin, vec3 ray_direction, int outputNodeIndex)
 		//position and normal
 		vec3 position = ray_origin + dist*ray_direction;
 		rayTree[outputNodeIndex].position = position;
-		// vec3 normal = (1-u-v)*vertexNormals[triangleIndices[triangleIndice].x]
-		// 		+u*vertexNormals[triangleIndices[triangleIndice].y]
-		// 		+v*vertexNormals[triangleIndices[triangleIndice].z];
 		vec3 edge1 = vertexPositions[triangleIndices[triangleIndice].y] - vertexPositions[triangleIndices[triangleIndice].x];
 		vec3 edge2 = vertexPositions[triangleIndices[triangleIndice].z] - vertexPositions[triangleIndices[triangleIndice].x];
 		vec3 normal = cross(edge1, edge2);
@@ -287,8 +274,6 @@ bool getRayInformation(vec3 ray_origin, vec3 ray_direction, int outputNodeIndex)
 		if(dot(ray_direction, normal)>0){
 				normal = -normal; //we are looking at the other side of the triangle.
 		}
-
-
 
 			//triangleColor
 		//light
@@ -301,9 +286,7 @@ bool getRayInformation(vec3 ray_origin, vec3 ray_direction, int outputNodeIndex)
 		rayTree[outputNodeIndex].triangleColor = ambient + diffuse + specular;
 		//shadow
 		int _triangleIndice;
-		float _distance;
-		float _u;
-		float _v;
+		float _distance, _u, _v;
 		if(dot(normal, lightDirection)<0 || find_closest_intersected_triangle(position, lightDirection, _triangleIndice, _distance, _u, _v)){
 			rayTree[outputNodeIndex].triangleColor = rayTree[outputNodeIndex].triangleColor/2.0;
 		}
@@ -332,8 +315,8 @@ bool getRayInformation(vec3 ray_origin, vec3 ray_direction, int outputNodeIndex)
 
 
 
-// MAIN COMPUTATIONS
 
+// MAIN COMPUTATIONS
 
 void initRayTree(){
 	//set valid flag of each node to 0
@@ -354,7 +337,7 @@ void enableSonsComputation(int i){
 
 void computeRayTree(vec3 camera_position, vec3 initial_ray_direction){
 	//compute all the rays information
-	//exceot final color
+	//except final color
 	//and write it in the rayTree
 	initRayTree();
 	if(getRayInformation(camera_position, initial_ray_direction, 0)){
@@ -370,6 +353,7 @@ void computeRayTree(vec3 camera_position, vec3 initial_ray_direction){
 		
 			vec3 ray_direction;
 			if(i%2==1){
+				//we are a left son
 				ray_direction = rayTree[fatherIndex].reflectedRay;
 			}
 			else{
@@ -394,7 +378,6 @@ void computeRaysColor(){
 		//so I can compute the color from leaves to root
 		//this way
 		if(rayTree[i].dataValid){
-
 			int reflectedSon = getLeftSonIndex(i);
 			int refractedSon = getRightSonIndex(i);
 			if(refractedSon<rayTreeSize && rayTree[reflectedSon].dataValid && rayTree[refractedSon].dataValid){
@@ -410,11 +393,14 @@ void computeRaysColor(){
 				vec3 refractedColor = rayTree[refractedSon].finalColor;
 				vec3 triangleColor = rayTree[i].triangleColor;
 
-				rayTree[i].finalColor = reflectionRatio*reflectedColor + refractionRatio*refractedColor + triangleColorRatio*triangleColor;
-				
+				rayTree[i].finalColor = reflectionRatio*reflectedColor 
+						+ refractionRatio*refractedColor 
+						+ triangleColorRatio*triangleColor;
 			}
 			else{
-				
+				//we are in a leave of the tree either because of the 
+				//limited number of recursion or because the ray
+				//didn't intersect any triangle.
 				//we put the final color to the triangleColor
 				rayTree[i].finalColor = rayTree[i].triangleColor;
 			}
@@ -423,17 +409,11 @@ void computeRaysColor(){
 	}
 }
 
-
-
-
 void main() {
 	vec3 ray_direction = normalize(non_normalized_ray_direction);
-
-
 	computeRayTree(camera_position, ray_direction);
 	computeRaysColor();
 	color = vec4(rayTree[0].finalColor, 1.0);
-
 
 	#ifdef TEST_MODE
 	if(ERROR_OCCURED){
@@ -441,5 +421,4 @@ void main() {
 		color = vec4(1.0, 0.0, 0.0, 1.0);
 	}
 	#endif
-
 }

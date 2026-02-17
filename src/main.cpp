@@ -83,13 +83,11 @@ GLuint g_ibo = 0;
 
 //storage buffer (this will store the scene data)
 GLuint g_vertexSbo = 0; //storage buffer object
-GLuint g_vertexNormalsSbo = 0;
 GLuint g_triangleSbo = 0;
-GLuint g_viewMatricesSbo = 0;
+GLuint g_objectPropertiesSbo = 0;
 
-// All vertex Colors packed in one array [x0, y0, z0, x1, y1, z1, ...]
+// All verteices packed in one array [x0, y0, z0, x1, y1, z1, ...]
 std::vector<float> g_vertexPositions;
-std::vector<float> g_vertexColors;
 // All triangle indices packed in one array [v00, v01, v02, v10, v11, v12, ...] with vij the index of j-th vertex of the i-th triangle
 std::vector<unsigned int> g_triangleIndices;
 
@@ -455,12 +453,6 @@ void initCPUgeometry() {
     1.f, -1.f, 0.f,
     1.f, 1.f, 0.f
   };
-  g_vertexColors = { // the array of vertex Colors [x0, y0, z0, x1, y1, z1, ...]
-    1.f, 0.f, 0.f,
-    0.f, 0.f, 1.f,
-    0.f, 1.f, 0.f,
-    1.f, 0.f, 0.f
-  };
   g_triangleIndices = { 0, 2, 1, 3, 1, 2};
 }
 
@@ -545,9 +537,6 @@ void initGPUstorageBuffer(){
   bufferSize = sizeof(float)*bufferData.size();
   glCreateBuffers(1, &g_vertexSbo);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_vertexSbo);
-  // glBufferStorage(
-  //           GL_SHADER_STORAGE_BUFFER, bufferSize, 
-  //           scene.vertexPositions.data(), GL_DYNAMIC_STORAGE_BIT);
   glBufferData(
             GL_SHADER_STORAGE_BUFFER, bufferSize, 
             bufferData.data(), GL_DYNAMIC_READ);
@@ -560,12 +549,12 @@ void initGPUstorageBuffer(){
 
   
   bufferSize = sizeof(ObjectProperties)*scene.objectProperties.size();
-  glCreateBuffers(1, &g_viewMatricesSbo);
-  glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_viewMatricesSbo);
+  glCreateBuffers(1, &g_objectPropertiesSbo);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_objectPropertiesSbo);
   glBufferData(
             GL_SHADER_STORAGE_BUFFER, bufferSize, 
             scene.objectProperties.data(), GL_DYNAMIC_READ);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, g_viewMatricesSbo);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, g_objectPropertiesSbo);
 
 
 
@@ -573,27 +562,10 @@ void initGPUstorageBuffer(){
   bufferSize = sizeof(uint)*uintBufferData.size();
   glCreateBuffers(1, &g_triangleSbo);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_triangleSbo);
-  // glBufferStorage(
-  //           GL_SHADER_STORAGE_BUFFER, bufferSize, 
-  //           scene.triangleIndices.data(), GL_DYNAMIC_STORAGE_BIT);
   glBufferData(
             GL_SHADER_STORAGE_BUFFER, bufferSize, 
             uintBufferData.data(), GL_DYNAMIC_READ);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, g_triangleSbo);
-
-  // getDataFromVec3Vector(scene.vertexNormals, bufferData);
-  // bufferSize = sizeof(float)*bufferData.size();
-  // std::cout<<"buffer size : "<<bufferSize<<std::endl;
-  // glCreateBuffers(1, &g_vertexNormalsSbo);
-  // glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_vertexNormalsSbo);
-  // // glBufferStorage(
-  // //           GL_SHADER_STORAGE_BUFFER, bufferSize, 
-  // //           scene.vertexPositions.data(), GL_DYNAMIC_STORAGE_BIT);
-  // glBufferData(
-  //           GL_SHADER_STORAGE_BUFFER, bufferSize, 
-  //           bufferData.data(), GL_DYNAMIC_READ);
-  // glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, g_vertexNormalsSbo);
-
 
 }
 
@@ -657,9 +629,6 @@ void render() {
   getDataFromUvec3Vector(scene.triangleIndices, uintBufferData);
   bufferSize = sizeof(uint)*uintBufferData.size();
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_triangleSbo);
-  // glBufferStorage(
-  //           GL_SHADER_STORAGE_BUFFER, bufferSize, 
-  //           scene.triangleIndices.data(), GL_DYNAMIC_STORAGE_BIT);
   glBufferData(
             GL_SHADER_STORAGE_BUFFER, bufferSize, 
             uintBufferData.data(), GL_DYNAMIC_READ);
