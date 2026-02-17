@@ -80,7 +80,6 @@ GLuint g_program = 0; // A GPU program contains at least a vertex shader and a f
 GLuint g_vao = 0;
 GLuint g_posVbo = 0;
 GLuint g_ibo = 0;
-GLuint g_earthTexID;
 
 //storage buffer (this will store the scene data)
 GLuint g_vertexSbo = 0; //storage buffer object
@@ -104,41 +103,6 @@ bool key_shift_pressed = false;
 //Scene
 Scene scene = Scene();
 
-
-
-// Basic camera model
-// class Camera {
-// public:
-//   inline float getFov() const { return m_fov; }
-//   inline void setFoV(const float f) { m_fov = f; }
-//   inline float getAspectRatio() const { return m_aspectRatio; }
-//   inline void setAspectRatio(const float a) { m_aspectRatio = a; }
-//   inline float getNear() const { return m_near; }
-//   inline void setNear(const float n) { m_near = n; }
-//   inline float getFar() const { return m_far; }
-//   inline void setFar(const float n) { m_far = n; }
-//   inline void setColor(const glm::vec3 &p) { m_pos = p; }
-//   inline glm::vec3 getColor() { return m_pos; }
-
-//   inline glm::mat4 computeViewMatrix() const {
-//     return glm::lookAt(m_pos, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-//   }
-
-//   // Returns the projection matrix stemming from the camera intrinsic parameter.
-//   inline glm::mat4 computeProjectionMatrix() const {
-//     return glm::perspective(glm::radians(m_fov), m_aspectRatio, m_near, m_far);
-//   }
-
-  
-
-// private:
-//   glm::vec3 m_pos = glm::vec3(0, 0, 0);
-//   float m_fov = 45.f;        // Field of view, in degrees
-//   float m_aspectRatio = 1.f; // Ratio between the width and the height of the image
-//   float m_near = 0.1f; // Distance before which geometry is excluded from the rasterization process
-//   float m_far = 10.f; // Distance after which the geometry is excluded from the rasterization process
-// };
-// Camera g_camera;
 
 
 class Camera {
@@ -460,10 +424,6 @@ void initGPUprogram() {
 
   glUseProgram(g_program);
 
-  g_earthTexID = loadTextureFromFileToGPU("../media/earth.jpg");
-  // ...
-  glUniform1i(glGetUniformLocation(g_program, "material.albedoTex"), 0); // texture unit 0
-  // TODO: set shader variables, textures, etc.
 }
 
 
@@ -530,20 +490,6 @@ void initGPUgeometry() {
   glEnableVertexAttribArray(0); //layout
 #endif
 
-vertexBufferSize = sizeof(float)*g_vertexColors.size(); // Gather the size of the buffer from the CPU-side vector
-#ifdef _MY_OPENGL_IS_33_
-  glGenBuffers(1, &g_posVbo);
-  glBindBuffer(GL_ARRAY_BUFFER, g_posVbo);
-  glBufferData(GL_ARRAY_BUFFER, vertexBufferSize, g_vertexColors.data(), GL_DYNAMIC_READ);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), 0);
-  glEnableVertexAttribArray(1);
-#else
-  glCreateBuffers(1, &g_posVbo);
-  glBindBuffer(GL_ARRAY_BUFFER, g_posVbo);
-  glNamedBufferStorage(g_posVbo, vertexBufferSize, g_vertexColors.data(), GL_DYNAMIC_STORAGE_BIT); // Create a data storage on the GPU and fill it from a CPU array
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), 0);
-  glEnableVertexAttribArray(1);
-#endif
 
   // Same for an index buffer object that stores the list of indices of the
   // triangles forming the mesh
@@ -633,24 +579,6 @@ void initGPUstorageBuffer(){
             uintBufferData.data(), GL_DYNAMIC_READ);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, g_triangleSbo);
 
-  // glm::mat4 matrix0 = transpose(glm::mat4(
-  //           1.0f, 0.0f, 0.0f, 0.0f, 
-  //           0.0f, 1.0f, 0.0f, 0.0f, 
-  //           0.0f, 0.0f, 1.0f, 0.0f,
-  //           0.0f, 0.0f, 0.0f, 1.0f));
-  // glm::mat4 matrix1 = transpose(glm::mat4(
-  //           1.0f, 0.0f, 0.0f, 0.0f, 
-  //           0.0f, 1.0f, 0.0f, 0.0f, 
-  //           0.0f, 0.0f, 0.0f, 0.0f,
-  //           0.0f, 0.0f, 0.0f, 1.0f));
-  // std::vector<glm::mat4> viewMatrices = {matrix0, matrix1};
-  // bufferSize = sizeof(glm::mat4)*viewMatrices.size();
-  // glCreateBuffers(1, &g_viewMatricesSbo);
-  // glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_viewMatricesSbo);
-  // glBufferData(
-  //           GL_SHADER_STORAGE_BUFFER, bufferSize, 
-  //           viewMatrices.data(), GL_DYNAMIC_READ);
-  // glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, g_viewMatricesSbo);
 
   
   bufferSize = sizeof(ObjectProperties)*scene.objectProperties.size();
@@ -754,14 +682,6 @@ void render() {
   glUniform1f(glGetUniformLocation(g_program, "half_height"), half_height);
   glUniform1f(glGetUniformLocation(g_program, "half_width"), half_width);
 
-  // const glm::mat4 viewMatrix = g_camera.computeViewMatrix();
-  // const glm::mat4 projMatrix = g_camera.computeProjectionMatrix();
-
-  //glActiveTexture(GL_TEXTURE0); // activate texture unit 0
-  //glBindTexture(GL_TEXTURE_2D, g_earthTexID);
-
-  // glUniformMatrix4fv(glGetUniformLocation(g_program, "viewMat"), 1, GL_FALSE, glm::value_ptr(viewMatrix)); // compute the view matrix of the camera and pass it to the GPU program
-  // glUniformMatrix4fv(glGetUniformLocation(g_program, "projMat"), 1, GL_FALSE, glm::value_ptr(projMatrix)); // compute the projection matrix of the camera and pass it to the GPU program
 
   glBindVertexArray(g_vao);     // activate the VAO storing geometry data
   glDrawElements(GL_TRIANGLES, g_triangleIndices.size(), GL_UNSIGNED_INT, 0); // Call for rendering: stream the current GPU geometry through the current GPU program

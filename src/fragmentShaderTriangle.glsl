@@ -8,10 +8,7 @@
 
 
 
-// INPUTS
-
-in vec3 fPosition;
-in vec3 fColor;
+// INPUTS / OUTPUTS
 
 //ray information
 in vec3 non_normalized_ray_direction;
