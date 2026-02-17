@@ -31,16 +31,19 @@ layout(std430, binding = 0) buffer sceneVertexPositions {
     vec3[] vertexPositions;
 };
 
-layout(std430, binding = 1) buffer sceneVertexNormals{
-	vec3[] vertexNormals;
+
+layout(std430, binding = 1) buffer sceneObjectProperties {
+    ObjectProperties[] objectProperties;
 };
 
 layout(std430, binding = 2) buffer scenetriangleIndices {
     uvec3[] triangleIndices;
 };
 
-layout(std430, binding = 3) buffer sceneObjectProperties {
-    ObjectProperties[] objectProperties;
+
+
+layout(std430, binding = 3) buffer sceneVertexNormals{
+	vec3[] vertexNormals;
 };
 
 
