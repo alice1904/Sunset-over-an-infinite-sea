@@ -177,6 +177,7 @@ void Scene::updateTriangles(glm::vec3 cameraCenter){
     int vertexIndex = 0;
     for(int i=0; i<=wave_resolution; i++){
         for(int j=0; j<=wave_resolution; j++){
+            //vertexIndex = j + i*(wave_resolution+1)
             // if(squareInfos[vertexIndex].hasChanged){
             //     squareInfos[vertexIndex].hasChanged = false;
                 if(squareInfos[vertexIndex].shouldBeDisplayed){
