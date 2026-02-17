@@ -93,7 +93,7 @@ class Scene {
                             //that represent the square whose left corer is vertex[i]
                             //should be display or not
         void getGridPositionRelativeToCamera(glm::vec3 pos, glm::vec3 cameraCenter, int* i, int*j);
-        void updateTriangles(glm::vec3 cameraCenter);
+        void updateTriangles();
 };
 
 #endif

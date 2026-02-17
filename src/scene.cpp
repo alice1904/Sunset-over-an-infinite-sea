@@ -45,6 +45,10 @@ int getRoundInt(float x){
     return n;
 }
 
+
+
+// GEOMETRY
+
 int Scene::getVertexIndex(int i ,int j){
     //return the index of the vertex in vertexPosition and vertexRelativePOsitions
     //note : i and j can be <0 or >SIZE
@@ -52,6 +56,33 @@ int Scene::getVertexIndex(int i ,int j){
     i = getModulo(i, wave_resolution+1);
     j = getModulo(j, wave_resolution+1);
     return j + i*(wave_resolution+1);;
+}
+
+void Scene::updateTriangles(){
+    int vertexIndex = 0;
+    for(int i=0; i<=wave_resolution; i++){
+        for(int j=0; j<=wave_resolution; j++){
+            //vertexIndex = j + i*(wave_resolution+1)
+            if(squareInfos[vertexIndex].hasChanged){
+                squareInfos[vertexIndex].hasChanged = false;
+                if(squareInfos[vertexIndex].shouldBeDisplayed){
+                    int a, b, c, d; //indices of the corners of the square
+                    a = getVertexIndex(i, j);
+                    b = getVertexIndex(i+1, j);
+                    c = getVertexIndex(i+1, j+1);
+                    d = getVertexIndex(i, j+1);
+                    triangleIndices[vertexIndex*2]   =  glm::uvec3(a, b, c);
+                    triangleIndices[vertexIndex*2+1] = glm::uvec3(a, c, d);
+                }
+                else{
+                    //this triangle is a point and will not be visible
+                    triangleIndices[vertexIndex*2] = glm::uvec3(0, 0, 0);
+                    triangleIndices[vertexIndex*2+1] = glm::uvec3(0, 0, 0);
+                }
+                vertexIndex+=1;
+            }
+        }
+    }
 }
 
 
@@ -93,7 +124,7 @@ void Scene::init(glm::vec3 cameraCenter){
 
     //TRIANGLES
     triangleIndices.resize(2*vertexPositions.size());
-    updateTriangles(cameraCenter);
+    updateTriangles();
 
 
     //OBJECTS
@@ -116,6 +147,8 @@ void Scene::init(glm::vec3 cameraCenter){
 
 
 
+// UPDATE
+
 
 void Scene::getGridPositionRelativeToCamera(glm::vec3 pos, glm::vec3 cameraCenter, int* i, int*j){
     float halfWIdth = seaWidth/2;
@@ -126,41 +159,6 @@ void Scene::getGridPositionRelativeToCamera(glm::vec3 pos, glm::vec3 cameraCente
 float Scene::waveFunction(float x, float y, float t){
     float phase = waveOmega*t - glm::dot(waveVector, glm::vec2(x, y));
     return waveAmplitude*(cos(phase));
-}
-
-void Scene::updateTriangles(glm::vec3 cameraCenter){
-    int vertexIndex = 0;
-    for(int i=0; i<=wave_resolution; i++){
-        for(int j=0; j<=wave_resolution; j++){
-            //vertexIndex = j + i*(wave_resolution+1)
-            if(squareInfos[vertexIndex].hasChanged){
-                squareInfos[vertexIndex].hasChanged = false;
-                if(squareInfos[vertexIndex].shouldBeDisplayed){
-                    int a, b, c, d; //indices of the corners of the square
-                    a = getVertexIndex(i, j);
-                    b = getVertexIndex(i+1, j);
-                    c = getVertexIndex(i+1, j+1);
-                    d = getVertexIndex(i, j+1);
-                    if(abs(vertexRelativePositions[a].x - vertexRelativePositions[b].x)>width_step){
-                        int i0,j0;
-                        getGridPositionRelativeToCamera(vertexRelativePositions[a], cameraCenter, &i0, &j0);
-                        std::cout<<"a : "<<i0<< " "<<j0<<" "<<wave_resolution<<std::endl;
-
-                        getGridPositionRelativeToCamera(vertexRelativePositions[b], cameraCenter, &i0, &j0);
-                        std::cout<<"b : "<<i0<< " "<<j0<<std::endl;
-                    }
-                    triangleIndices[vertexIndex*2]   =  glm::uvec3(a, b, c);
-                    triangleIndices[vertexIndex*2+1] = glm::uvec3(a, c, d);
-                }
-                else{
-                    //this triangle is a point and will not be visible
-                    triangleIndices[vertexIndex*2] = glm::uvec3(0, 0, 0);
-                    triangleIndices[vertexIndex*2+1] = glm::uvec3(0, 0, 0);
-                }
-                vertexIndex+=1;
-            }
-        }
-    }
 }
 
 void Scene::update(float dt, glm::vec3 cameraCenter){
@@ -182,15 +180,6 @@ void Scene::update(float dt, glm::vec3 cameraCenter){
             if(j!=new_j){
                 vertexRelativePositions[vertexIndex].z += ((new_j - j)/(wave_resolution+1))*(seaWidth+width_step);
             }
-
-            getGridPositionRelativeToCamera(vertexRelativePositions[vertexIndex], cameraCenter, &i, &j);
-            if(i!=new_i && j!=new_j){
-                std::cout<<i<<" "<<new_i<<" "<<j<<" "<<new_j<<std::endl;
-                assert(i==new_i && j==new_j);
-            }
-            assert(i<=wave_resolution && j<=wave_resolution);
-
-            
         }
 
         bool shouldBeDisplayed = true;
@@ -204,9 +193,6 @@ void Scene::update(float dt, glm::vec3 cameraCenter){
         squareInfos[vertexIndex].shouldBeDisplayed = shouldBeDisplayed;
         squareInfos[vertexIndex].hasChanged = true;
 
-        if(squareInfos[vertexIndex].shouldBeDisplayed){
-            assert(i<wave_resolution && j<wave_resolution);
-        }
 
 
         //spring force
@@ -228,21 +214,7 @@ void Scene::update(float dt, glm::vec3 cameraCenter){
 
         vertexPositions[vertexIndex] = glm::vec3(0, offset, 0) + vertexRelativePositions[vertexIndex];
         vertexPositions[vertexIndex] = glm::vec3(0, offset, 0) + vertexRelativePositions[vertexIndex];
-
-
-        getGridPositionRelativeToCamera(vertexRelativePositions[vertexIndex], cameraCenter, &i, &j);
-        assert(i<=wave_resolution && j<=wave_resolution);
-        if(squareInfos[vertexIndex].shouldBeDisplayed){
-            assert(i<wave_resolution && j<wave_resolution);
-        }
     }
 
-    updateTriangles(cameraCenter);
-    for(int vertexIndex=0; vertexIndex<vertexPositions.size(); vertexIndex++){
-        int i, j;
-        getGridPositionRelativeToCamera(vertexRelativePositions[vertexIndex], cameraCenter, &i, &j);
-        assert(i<=wave_resolution && j<=wave_resolution);
-        
-    }
-    
+    updateTriangles();
 }
