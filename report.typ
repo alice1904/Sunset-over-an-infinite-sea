@@ -108,7 +108,7 @@ If no triangle is intersected, I simply return the color of the sky whose calcul
 
 === Background
 
-To find the color of the sky, I simply compute the dot producti between the ray direction and the light direction and return the color of a color gradient ranging from yellow to blue.
+To find the color of the sky, I simply compute the dot producti between the ray direction and the light direction and return the corresponding color in a color gradient ranging from yellow to blue.
 
 
 
