@@ -153,7 +153,7 @@ As you can see in the figure, the water looks pink while the mesh color is cyan.
 
 Then I attached a vertical spring to each vertex. I had to put a different spring constant to each vertex, otherwise, the vertices would be at the height 0 at the same time, and then we would have an ugly flat sea for a moment and a brutal change of triangle colors when the triangles' orientation change at the same time.
 
-$ arrow(F) = -"k"*y. arrow(u_y) $
+$ arrow(F) = -k*y.arrow(u)_y $
 
 where $k$ is the spring constant.
 
@@ -164,3 +164,44 @@ $ "offset" = cos(w*t-arrow(k).arrow(x)) $
 where $w$ is the pulsation and $arrow(k)$ is the wave vector
 
 In our simulation, $arrow(x)$ is the position in the horizontal $(x, z)$ plane.
+
+
+ = Changing the mesh to simulate infinite surface
+
+ == Conventions 
+
+For the next calculations in this document, I define the % operator for integers as described below :
+
+$ a % b = c <=>  cases(
+  a = k * b + c ,
+  k in ZZ ,
+  c in \[0 comma b\[
+) $
+
+Note that it is not the same definion than in C. In C, the result of % for a negative number will be a negative number, which is not the behavior expected for my formulas. That means I had to create a special function in my code to implement this operator.
+
+== Structures used for vertices and triangle indices
+
+In order to understand the formulas to update the mesh, you should remember how my vertices and triangles are stored in the memory.
+
+=== Vertices
+
+My vertices and triangle indices are both stored in arrays. The vertices are stored in 1D array which should be interpreted as a 2D array. The indices $(i, j)$  of each vertex represent its position in the initial grid. The acutal index to access the vertex in the array computed this way : 
+$ "vertexIndex" = j + i*(N+1) $
+
+where $N$ is the number of columns in the grid.
+
+You will notice that $i$ and $j$ range from 0 to $N$ included and that the number of vertices is therefore $2^(N+1)$
+
+=== Triangles
+
+To render the sea, I need $2*N^2$ triangles. However, as I will explain later in this document, the vertices are going to move from one side of the grid to the other, and the set of triangles that should exists or not will change over time.
+The way I will move the vertices (when i say "move", I mean changing the $(x,z)$ position, the vertex remains at the same index in the array), ensures that the only triangles I will have to render will be composed of neighboring vertex in the 2D array if we consider the $(i,j)$ indices modulo N. 
+You can think of my array as a grid in a snake game where you can go from the left wall to right wall directly. Therefore I decide to associate each vertex to 2 triangles, even if the triangles should not be displayed at a time t.
+
+ To simplify the access and to order the strucutre, 
+I wanted to associate a square composed of 2 triangles to each vertex 
+(you can consider that each vertex is the left corner of the square even if this association is done regardless to any space position). 
+But there should be no triangles associated to the vertices that are in the last row or last column of my 2D array.
+However, as I will explain later in this document, the vertices are going to move from one side of the grid to the other, and the set of triangles that should exists or not will change over time. 
+
