@@ -133,6 +133,43 @@ if(sun_closeness>sunThreshold){
 	}
  ```
 
+ ==  Intermediate results
+#figure(grid(
+   columns: 2,     // 2 means 2 auto-sized columns
+    gutter: 2mm,
+  figure(
+  image("screenshots\1\Capture d’écran du 2026-01-20 22-29-55.png", width: 100%),
+  caption: [
+    Light
+  ]
+  ),
+  figure(
+  image("screenshots\1\Capture d’écran du 2026-01-20 22-30-05.png", width: 100%),
+  caption: [
+    Shadow
+  ]
+)))
+
+#figure(grid(
+   columns: 2,     // 2 means 2 auto-sized columns
+    gutter: 2mm,
+  figure(
+  image("screenshots\2\mirror_rect.png", width: 100%),
+  caption: [
+    reflection
+  ],
+)
+,
+  figure(
+  image("screenshots\2\\transparent_rect.png", width: 100%),
+  caption: [
+    refraction
+  ],
+)))
+
+
+
+
  = Sea geometry and simulation
 
 == Initial mesh
@@ -186,22 +223,88 @@ In order to understand the formulas to update the mesh, you should remember how 
 
 === Vertices
 
-My vertices and triangle indices are both stored in arrays. The vertices are stored in 1D array which should be interpreted as a 2D array. The indices $(i, j)$  of each vertex represent its position in the initial grid. The acutal index to access the vertex in the array computed this way : 
-$ "vertexIndex" = j + i*(N+1) $
+My vertices and triangle indices are both stored in arrays. The vertices are stored in 1D array which should be interpreted as a 2D array. The indices $(k, l)$  of each vertex represent its position in the initial grid. The acutal index to access the vertex in the array computed this way : 
+$ "vertexIndex" = l + k*(N+1) $
 
 where $N$ is the number of columns in the grid.
 
-You will notice that $i$ and $j$ range from 0 to $N$ included and that the number of vertices is therefore $2^(N+1)$
+You will notice that $k$ and $l$ range from 0 to $N$ included and that the number of vertices is therefore $2^(N+1)$.
 
 === Triangles
 
 To render the sea, I need $2*N^2$ triangles. However, as I will explain later in this document, the vertices are going to move from one side of the grid to the other, and the set of triangles that should exists or not will change over time.
-The way I will move the vertices (when i say "move", I mean changing the $(x,z)$ position, the vertex remains at the same index in the array), ensures that the only triangles I will have to render will be composed of neighboring vertex in the 2D array if we consider the $(i,j)$ indices modulo N. 
-You can think of my array as a grid in a snake game where you can go from the left wall to right wall directly. Therefore I decide to associate each vertex to 2 triangles, even if the triangles should not be displayed at a time t.
+The way I will move the vertices (when I say "move", I mean changing the $(x,z)$ position, the vertex remains at the same index in the array), ensures that the only triangles I will have to render will be composed of neighboring vertex in the 2D array if we consider the $(k,l)$ indices modulo N. 
+You can think of my array as a grid in a snake game where you can go from the left wall to the right wall directly. Therefore I decide to associate with each vertex of index $n$ 2 triangles of indices $2*n$ and $2*n+1$, whose the vertex is the "left corner" of the square they form, even if the triangles should not be displayed at a time t. 
 
- To simplify the access and to order the strucutre, 
-I wanted to associate a square composed of 2 triangles to each vertex 
-(you can consider that each vertex is the left corner of the square even if this association is done regardless to any space position). 
-But there should be no triangles associated to the vertices that are in the last row or last column of my 2D array.
-However, as I will explain later in this document, the vertices are going to move from one side of the grid to the other, and the set of triangles that should exists or not will change over time. 
 
+
+#figure(
+  image("report_figures/possible_triangles.png", width: 70%),
+  caption: [
+    All possible triangles
+  ],
+)
+
+If a triangle should not be displayed, I change its indices to $(0, 0, 0)$ and it is no longer visible. We can update the triangle associated with the vertex of indices $(k,l)$ with the following code :
+
+```C
+v1 =  l          +   k*(N+1);
+v2 = (l+1)%(N+1) +   k*(N+1);
+v3 =  l          + ((k+1)%(N+1))*(N+1);
+v4 = (l+1)%(N+1) + ((k+1)%(N+1))*(N+1);
+n = v1;
+if(should_be_displayed[n]){
+    triangles[2*n]   = (v1, v2, v3);
+    triangles[2*n+1] = (v2, v3, v4); 
+}
+else{
+    triangles[2*n]   = (0, 0, 0);
+    triangles[2*n+1] = (0, 0, 0);
+}
+```
+
+I have $2*2^(N+1)$ triangles instead of $2^N$ but this structure is more convenient for what we want to do with it. If we are concerned about the ray tracing performance, we can easily copy the $2*2^N$ non-null values of this array into another one that we would pass to the ray tracer, but we would have to do so for each frame, or at least each time our mesh changes.
+
+
+== Grid position
+
+What will happend concretely for our eyes when the camera moves is that the grid of vertices that represents the sea will also moves after a certain threshold. The grid will always match the infinite grid obtained by extending the initial grid. We always move the vertices by step of $(N+1)*S$ where $S$ is the side of a cell of the infinite grid, such as all points of the actual grid in front of the camera is occupied by exactly one vertex. The following figure illustrates this point.
+
+#figure(
+  image("report_figures/grid_moves.png", width: 100%),
+  caption: [
+    The grid of the sea moving
+  ],
+)
+
+To know when and where to move our vertices, we compute the coordinates $(i, j)$ of our vertices in this virtual grid that follows the camera.
+The formula is given below, $x$ and $z$ being the coordinates of the vertex in the $(x, z)$ plane : 
+
+$ 
+i &= "round"(( x - "camera".x + W/2)  / S )  \
+j &= "round"(( z - "camera".z + W/2)  / S ) \
+"where"  S &= "the side of a cell of the grid" \
+        W &= "the width of the grid"
+$
+
+If $i$ or $j$ $in.not \[ 0 comma N \]$ , the vertex is currently outside the grid and it has to be shifted in order to go back into it. The following formula can be used to compute its new coordinates :
+$
+x' &= x + ((i' - i)/ (N+1) ).S.(N+1) \
+z' &= z + ((j' - j)/(N+1)) .S.(N+1) 
+$$
+"where" cases(
+  i' &= i%(N+1), 
+  j' &= j%(N+1)
+)
+$
+
+#figure(
+  image("report_figures/grid_position.png", width: 100%),
+  caption: [
+    illustration of the grid positions
+  ],
+)
+
+This grid position, also tells us whether we should display the triangles associated with the vertex. In fact, if $i=N$ or $j=N$, we are on the border of the grid and the triangles should not be displayed, since the neighboring vertices are on the other side of the grid. 
+
+= Performance and possible improvements
