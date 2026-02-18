@@ -28,6 +28,8 @@
   )
 )
 
+
+
 #title(none)
 <title>
 
@@ -46,5 +48,61 @@
 #linebreak() 
 = Ray tracing
 
-bablabl 
-= Background
+
+== Concrete implementation
+
+I decided to do the computation of my ray tracer on the GPU. Basically, my vertex shader receives 2 triangles that represents the screen and passes to the fragment shader the direction of a ray to shoot for each fragment. The ray tracing is therefore performed in the fragment shader.
+
+=== Storage buffer
+
+To pass my vertices and triangles to the fragment shader, I used storage buffers. I wanted to interpret the buffer's data as vec3 array in the shader, but the problem was that in glsl, vec3 have to be aligned like vec4. If verticesPosition is a vec3 array, the address of verticesPositions[1] is the address of verticesPositions[0] + 4 \* sizeof(float), while in C the address would be the address of verticesPositions[0] + 3 \* sizeof(float). The solution I found was to add 1 float between each vec3 in the C struct before sending it to the shader.
+
+=== Object Properties 
+
+To differentiate the objects, I simply passed another storage buffer called objectProperties which stored both the objects' properties (color, reflection/refraction ratio, diffuse/specular ratio) and the index of the last triangle. The challenge was to put all this information in a struct where the color would be well aligned (see Storage Buffer part above). Fortunately, I had 4 floats (4 bytes in glsl), 1 int (4 bytes in glsl) and 1 vec3 (3 \* 4 bytes) which makes exactly 8 \* 4 bytes (remember : vec3 has to be aligned on 4 \* 4 bytes). To be sure the int will take 4 bytes in the C struct, I used the type int32_t from the stdint.h library.
+
+Then each time I find the closest triangle intersected by a ray, I have to browse the list of objects to determine from which object it is, but it is not a big problem because I only have a couple of objects (only 1 beging the sea in the final scene).
+
+
+=== Recursion and trees
+
+Unfortunately, you cannot have recursive functions in glsl. But ray tracing needs recursion to track all the rays obtained by refraction and reflection. I decided to implement a tree representing the cast rays. To do so I used an array of size $2**("height" + 1) - 1$. The nodes are stored in the array's cells. The sons'index of the node of index i are $2*i+1$ and $2*i+2$. For each node I stored a struct containing information about the ray. I first compute the direction and origin of each reflected and refracted ray from root to leaves and then compute the final color from leaves to root. 
+
+== Concrete computations
+
+=== Computing the initial ray
+
+We have one initial ray for each fragment of the quad I display. This ray comes from the position of the screen and points towards the world position of the corresponding point of virtual screen in front of the camera.
+The origin of the ray is always the camera position and is passed to the fragment shader as a uniform value.
+I used the parameters of the camera (Fov, aspectRatio and up and right direction) to determine the direction of the ray of each fragment. Concretely, I compute the direction of the ray in the vertex shader for each corner of the quad with the following formula ( $(x, y)$ is the position of each vertex with $x$ and $y$ ranging from -1 to 1 ) : 
+
+
+
+$ "rayDiection" = "forward" + (x*"halfWidth")."right" + (y*"halfHeight")."up" $
+
+where
+
+ $ "halfHeight" &= "tan"("Fov"/2) \
+  "halfWidth" &= "aspectRation"*"halfHeight" $
+
+The direction is then interpolated for each fragment.
+
+
+
+=== Computing other rays
+
+To compute the reflected ray, I used the coordinates of the point of intersection and the normal $n$ of the intersected triangle.
+
+$ "reflectedRay" = 2*("dot"(-"ray_direction", n))*n + "ray_direction" $
+
+For the refracted ray, I change the origin of the ray and keep the same direction. I assume I have the same propagation medium everywhere, and thus the same refraction index. Concretely, I assume all my transparent surfaces are like very thin glass surfaces. In any case, I only used reflection for my final scene, which is enough since in the case of a real sea, the depth of the water is large enough for the observer to only see an opaque blue surface.
+
+The last ray that is created is the shadow ray. It is shot toward the light source and is used to detect whether the point of interection is in shadow.
+
+
+=== Mixing color
+
+To obtain the final color of a fragment, I mix the color obtained by the phong light model in the point of intersection and the colors computed recursively by shooting the reflected and refracted ray. As for the shadow ray, if it intersected a triangle, I divide the phong light model color by 2.
+
+=== Background
+
