@@ -102,7 +102,33 @@ The last ray that is created is the shadow ray. It is shot toward the light sour
 
 === Mixing color
 
-To obtain the final color of a fragment, I mix the color obtained by the phong light model in the point of intersection and the colors computed recursively by shooting the reflected and refracted ray. As for the shadow ray, if it intersected a triangle, I divide the phong light model color by 2.
+To obtain the final color of a fragment, I mix the color obtained by the phong light model in the point of intersection and the colors computed recursively by shooting the reflected and refracted ray. As for the shadow ray, if it intersected a triangle, I divide the phong light model color by 2. 
+
+If no triangle is intersected, I simply return the color of the sky whose calculation is explained in the next paragraph.
 
 === Background
 
+To find the color of the sky, I simply compute the dot producti between the ray direction and the light direction and return the color of a color gradient ranging from yellow to blue.
+
+
+
+#linebreak() 
+
+```C
+float sun_closeness = dot(rayDirection, normalize(lightDirection));
+if(sun_closeness>sunThreshold){
+		return yellow;
+	}
+	else if(sun_closeness>haloThreshold){
+		float x = (sun_closeness-haloThreshold)/(sunThreshold-haloThreshold);
+		return getGradient(orange, yellow, x);
+	}
+	else if(sun_closeness>pinkSkyThreshold){
+		float x = (sun_closeness - pinkSkyThreshold)/(haloThreshold - pinkSkyThreshold);
+		return getGradient(pink, orange, x);
+	}
+	else{
+		float x = (sun_closeness - -1)/(pinkSkyThreshold - -1);
+		return getGradient(blue, pink, x);
+	}
+ ```
