@@ -132,3 +132,35 @@ if(sun_closeness>sunThreshold){
 		return getGradient(blue, pink, x);
 	}
  ```
+
+ = Sea geometry and simulation
+
+== Initial mesh
+
+ For the sea, I took inspiration from the video game Monument Valley. 
+I split a rectangle into triangles (a regular grid, each cell being split into 2 triangles). The height of each vertex is random in a certain range, which gives us a nice blocky sea as you can see in figure 1. 
+
+#figure(
+  image("screenshots\4\sunset_over_sea.png", width: 60%),
+  caption: [
+    grid of vertices with random height.
+  ],
+)
+
+As you can see in the figure, the water looks pink while the mesh color is cyan. It is because of the reflection which represents 70% of the final mixed color.
+
+== Simulation
+
+Then I attached a vertical spring to each vertex. I had to put a different spring constant to each vertex, otherwise, the vertices would be at the height 0 at the same time, and then we would have an ugly flat sea for a moment and a brutal change of triangle colors when the triangles' orientation change at the same time.
+
+$ arrow(F) = -"k"*y. arrow(u_y) $
+
+where $k$ is the spring constant.
+
+Unfortunately, with this animation, there is no coherence between the wave crests while in the sea you usually have huge waves in addition to small oscillation of the water. That's why I added a vertical offset to each vertex which is obtained with the plane wave formula :
+
+$ "offset" = cos(w*t-arrow(k).arrow(x)) $ 
+
+where $w$ is the pulsation and $arrow(k)$ is the wave vector
+
+In our simulation, $arrow(x)$ is the position in the horizontal $(x, z)$ plane.
