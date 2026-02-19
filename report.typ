@@ -46,6 +46,7 @@
 ]
 
 #linebreak() 
+#linebreak() 
 = Ray tracing
 
 
@@ -133,6 +134,7 @@ if(sun_closeness>sunThreshold){
 	}
  ```
 
+#linebreak()
  ==  Intermediate results
 #figure(grid(
    columns: 2,     // 2 means 2 auto-sized columns
@@ -175,12 +177,22 @@ if(sun_closeness>sunThreshold){
 == Initial mesh
 
  For the sea, I took inspiration from the video game Monument Valley. 
-I split a rectangle into triangles (a regular grid, each cell being split into 2 triangles). The height of each vertex is random in a certain range, which gives us a nice blocky sea as you can see in figure 1. 
+I split a rectangle into triangles (a regular grid, each cell being split into 2 triangles). The height of each vertex is random in a certain range, which gives us a nice blocky sea as you can see in the following figure. 
+
+#figure(
+  image("screenshots\4\sunset_over_sea_afar.png", width: 60%),
+  caption: [
+    grid of vertices with random height
+  ],
+)
+
+#linebreak()
+
 
 #figure(
   image("screenshots\4\sunset_over_sea.png", width: 60%),
   caption: [
-    grid of vertices with random height.
+    closer view on the sea
   ],
 )
 
@@ -202,6 +214,34 @@ where $w$ is the pulsation and $arrow(k)$ is the wave vector
 
 In our simulation, $arrow(x)$ is the position in the horizontal $(x, z)$ plane.
 
+
+#figure(
+  image("screenshots\5\final_result.png", width: 60%),
+  caption: [
+    Waves after implementing the simulation
+  ],
+)
+
+#linebreak()
+#linebreak()
+
+#figure(
+  grid(
+    columns: 2,     // 2 means 2 auto-sized columns
+    gutter: 2mm,
+    figure(
+    image("screenshots\7\high_resolution.png", width: 100%)
+    ),
+    figure(
+    image("screenshots\7\\night_waves4.png", width: 100%)
+    )
+  ), 
+  caption:[Waves with more triangles]
+)
+
+
+#linebreak()
+#linebreak()
 
  = Changing the mesh to simulate infinite surface
 
@@ -307,4 +347,14 @@ $
 
 This grid position, also tells us whether we should display the triangles associated with the vertex. In fact, if $i=N$ or $j=N$, we are on the border of the grid and the triangles should not be displayed, since the neighboring vertices are on the other side of the grid. 
 
+#linebreak()
+#linebreak()
 = Performance and possible improvements
+
+== Ray tracing
+
+For now, my ray tracing is rather slow. On my laptop, which dosen't have a good gpu, the simulation works in real time for my default scene which contains 242 triangles. But when I have about 1000 triangles, it becomes very slow. We should implement bouding boxes to reduce the number tested for each ray. To make it effictive, we should have several boxes for our single mesh but the problem is that our mesh is liable to change completly so we would have to recompute the bouding boxes frequentely. It must be more efficient than it is now nonetheless. 
+
+== Animation computations
+
+The way I update the mesh and implement my physics computations has the particularity of being completly parallelizable. The changes I made for each vertex and its associated triangles depends only on its own coordinates. For now I use OpenMP for each loop to speed up the calculations, but I could implement them on the GPU, for example in a compute shader. In addition to accelerating the computations, we would not have to copy the vertex data from the CPU memory to the GPU one, which also takes a certain amount of time.  
