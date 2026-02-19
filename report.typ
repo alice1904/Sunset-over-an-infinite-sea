@@ -41,18 +41,16 @@
 
 #align(center)[
   #set par(justify: false)
-  *Introducion* \
-  For this project, I wanted to focus more on the aesthetic than trying to reproducing one or more specific methods I would have found in research papers. This project aims to render a sea under a sunset. The camera can be moved in such a way that the sea seems infinite. I used ray tracing for the rendering. My project focuses more on the geometry and simulation part (maybe more on geometry). The simulation consists in imitating waves and water behavior more in a descriptive way than in a physical way. For the geometry part, I created the mesh from scratch using code and I update it each time the camera moves using an algorithm I found myself.
-]
+  *Introduction* \
+    For this project, I wanted to focus more on the aesthetic than trying to reproduce one or more specific methods I would have found in research papers. This project aims to render a sea under a sunset. The camera can be moved in such a way that the sea seems infinite. I used ray tracing for the rendering. My project focuses more on geometry and simulation (maybe more on geometry). The simulation consists in imitating waves and water behavior more in a descriptive way than in a physical way. For the geometry part, I created the mesh from scratch using code, and I update it each time the camera moves using an algorithm I found myself.]
 
 #linebreak() 
 #linebreak() 
 = Ray tracing
 
-
 == Concrete implementation
 
-I decided to do the computation of my ray tracer on the GPU. Basically, my vertex shader receives 2 triangles that represents the screen and passes to the fragment shader the direction of a ray to shoot for each fragment. The ray tracing is therefore performed in the fragment shader.
+I decided to do the computation of my ray tracer on the GPU. Basically, my vertex shader receives 2 triangles that represent the screen and passes to the fragment shader the direction of a ray to shoot for each fragment. The ray tracing is therefore performed in the fragment shader.
 
 === Storage buffer
 
@@ -62,21 +60,21 @@ To pass my vertices and triangles to the fragment shader, I used storage buffers
 
 To differentiate the objects, I simply passed another storage buffer called objectProperties which stored both the objects' properties (color, reflection/refraction ratio, diffuse/specular ratio) and the index of the last triangle. The challenge was to put all this information in a struct where the color would be well aligned (see Storage Buffer part above). Fortunately, I had 4 floats (4 bytes in glsl), 1 int (4 bytes in glsl) and 1 vec3 (3 \* 4 bytes) which makes exactly 8 \* 4 bytes (remember : vec3 has to be aligned on 4 \* 4 bytes). To be sure the int will take 4 bytes in the C struct, I used the type int32_t from the stdint.h library.
 
-Then each time I find the closest triangle intersected by a ray, I have to browse the list of objects to determine from which object it is, but it is not a big problem because I only have a couple of objects (only 1 beging the sea in the final scene).
+Then each time I find the closest triangle intersected by a ray, I have to browse the list of objects to determine which object it is from, but it is not a big problem because I only have a couple of objects (only 1 being the sea in the final scene).
 
 
 === Recursion and trees
 
-Unfortunately, you cannot have recursive functions in glsl. But ray tracing needs recursion to track all the rays obtained by refraction and reflection. I decided to implement a tree representing the cast rays. To do so I used an array of size $2**("height" + 1) - 1$. The nodes are stored in the array's cells. The sons'index of the node of index i are $2*i+1$ and $2*i+2$. For each node I stored a struct containing information about the ray. I first compute the direction and origin of each reflected and refracted ray from root to leaves and then compute the final color from leaves to root. 
+
+Unfortunately, you cannot have recursive functions in glsl. But ray tracing needs recursion to track all the rays obtained by refraction and reflection. I decided to implement a tree representing the cast rays. To do so I used an array of size $2**("height" + 1) - 1$. The nodes are stored in the array's cells. The sons’ indices of the node of index i are $2*i+1$ and $2*i+2$. For each node I stored a struct containing information about the ray. I first computed the direction and origin of each reflected and refracted ray from root to leaves and then computed the final color from leaves to root. 
 
 == Concrete computations
 
 === Computing the initial ray
 
-We have one initial ray for each fragment of the quad I display. This ray comes from the position of the screen and points towards the world position of the corresponding point of virtual screen in front of the camera.
+We have one initial ray for each fragment of the quad I display. This ray comes from the position of the screen and points towards the world position of the corresponding point of the virtual screen in front of the camera.
 The origin of the ray is always the camera position and is passed to the fragment shader as a uniform value.
-I used the parameters of the camera (Fov, aspectRatio and up and right direction) to determine the direction of the ray of each fragment. Concretely, I compute the direction of the ray in the vertex shader for each corner of the quad with the following formula ( $(x, y)$ is the position of each vertex with $x$ and $y$ ranging from -1 to 1 ) : 
-
+I used the parameters of the camera (Fov, aspectRatio and up and right directions) to determine the direction of the ray of each fragment. Concretely, I computed the direction of the ray in the vertex shader for each corner of the quad with the following formula ( $(x, y)$ is the position of each vertex with $x$ and $y$ ranging from -1 to 1 ) : 
 
 
 $ "rayDiection" = "forward" + (x*"halfWidth")."right" + (y*"halfHeight")."up" $
@@ -98,18 +96,18 @@ $ "reflectedRay" = 2*("dot"(-"ray_direction", n))*n + "ray_direction" $
 
 For the refracted ray, I change the origin of the ray and keep the same direction. I assume I have the same propagation medium everywhere, and thus the same refraction index. Concretely, I assume all my transparent surfaces are like very thin glass surfaces. In any case, I only used reflection for my final scene, which is enough since in the case of a real sea, the depth of the water is large enough for the observer to only see an opaque blue surface.
 
-The last ray that is created is the shadow ray. It is shot toward the light source and is used to detect whether the point of interection is in shadow.
+The last ray that is created is the shadow ray. It is shot toward the light source and is used to detect whether the point of intersection is in shadow.
 
 
 === Mixing color
 
-To obtain the final color of a fragment, I mix the color obtained by the phong light model in the point of intersection and the colors computed recursively by shooting the reflected and refracted ray. As for the shadow ray, if it intersected a triangle, I divide the phong light model color by 2. 
+To obtain the final color of a fragment, I mix the color obtained by the phong light model in the point of intersection and the colors computed recursively by shooting the reflected and refracted rays. As for the shadow ray, if it intersected a triangle, I divide the phong light model color by 2. 
 
 If no triangle is intersected, I simply return the color of the sky whose calculation is explained in the next paragraph.
 
 === Background
 
-To find the color of the sky, I simply compute the dot producti between the ray direction and the light direction and return the corresponding color in a color gradient ranging from yellow to blue.
+To find the color of the sky, I simply compute the dot product between the ray direction and the light direction and return the corresponding color in a color gradient ranging from yellow to blue.
 
 
 
@@ -200,13 +198,12 @@ As you can see in the figure, the water looks pink while the mesh color is cyan.
 
 == Simulation
 
-Then I attached a vertical spring to each vertex. I had to put a different spring constant to each vertex, otherwise, the vertices would be at the height 0 at the same time, and then we would have an ugly flat sea for a moment and a brutal change of triangle colors when the triangles' orientation change at the same time.
-
+Then I attached a vertical spring to each vertex. I had to put a different spring constant to each vertex, otherwise, the vertices would be at height 0 at the same time, and then we would have an ugly flat sea for a moment and a brutal change of triangle colors when the triangles' orientations change at the same time.
 $ arrow(F) = -k*y.arrow(u)_y $
 
 where $k$ is the spring constant.
 
-Unfortunately, with this animation, there is no coherence between the wave crests while in the sea you usually have huge waves in addition to small oscillation of the water. That's why I added a vertical offset to each vertex which is obtained with the plane wave formula :
+Unfortunately, with this animation, there is no coherence between the wave crests while in the sea you usually have huge waves in addition to small oscillation of the water. That's why I added a vertical offset to each vertex which is obtained with the plane wave formula:
 
 $ "offset" = cos(w*t-arrow(k).arrow(x)) $ 
 
@@ -247,7 +244,7 @@ In our simulation, $arrow(x)$ is the position in the horizontal $(x, z)$ plane.
 
  == Conventions 
 
-For the next calculations in this document, I define the % operator for integers as described below :
+For the next calculations in this document, I define the % operator for integers as described below:
 
 $ a % b = c <=>  cases(
   a = k * b + c ,
@@ -255,15 +252,15 @@ $ a % b = c <=>  cases(
   c in \[0 comma b\[
 ) $
 
-Note that it is not the same definion than in C. In C, the result of % for a negative number will be a negative number, which is not the behavior expected for my formulas. That means I had to create a special function in my code to implement this operator.
+Note that it is not the same definition than in C. In C, the result of % for a negative number will be a negative number, which is not the behavior expected for my formulas. That means I had to create a special function in my code to implement this operator.
 
 == Structures used for vertices and triangle indices
 
-In order to understand the formulas to update the mesh, you should remember how my vertices and triangles are stored in the memory.
+To understand the formulas to update the mesh, you should remember how my vertices and triangles are stored in the memory.
 
 === Vertices
 
-My vertices and triangle indices are both stored in arrays. The vertices are stored in 1D array which should be interpreted as a 2D array. The indices $(k, l)$  of each vertex represent its position in the initial grid. The acutal index to access the vertex in the array computed this way : 
+My vertices and triangle indices are both stored in arrays. The vertices are stored in 1D array which should be interpreted as a 2D array. The indices $(k, l)$  of each vertex represent its position in the initial grid. The acutal index to access the vertex in the array computed this way: 
 $ "vertexIndex" = l + k*(N+1) $
 
 where $N$ is the number of columns in the grid.
@@ -272,9 +269,9 @@ You will notice that $k$ and $l$ range from 0 to $N$ included and that the numbe
 
 === Triangles
 
-To render the sea, I need $2*N^2$ triangles. However, as I will explain later in this document, the vertices are going to move from one side of the grid to the other, and the set of triangles that should exists or not will change over time.
-The way I will move the vertices (when I say "move", I mean changing the $(x,z)$ position, the vertex remains at the same index in the array), ensures that the only triangles I will have to render will be composed of neighboring vertex in the 2D array if we consider the $(k,l)$ indices modulo N. 
-You can think of my array as a grid in a snake game where you can go from the left wall to the right wall directly. Therefore I decide to associate with each vertex of index $n$ 2 triangles of indices $2*n$ and $2*n+1$, whose the vertex is the "left corner" of the square they form, even if the triangles should not be displayed at a time t. 
+To render the sea, I need $2*N^2$ triangles. However, as I will explain later in this document, the vertices are going to move from one side of the grid to the other, and the set of triangles that should exist or not will change over time.
+The way I will move the vertices (when I say "move", I mean changing the $(x,z)$ position, the vertex remains at the same index in the array), ensures that the only triangles I will have to render will be composed of neighboring vertices in the 2D array if we consider the $(k,l)$ indices modulo N. 
+You can think of my array as a grid in a snake game where you can go from the left wall to the right wall directly. Therefore, I decide to associate with each vertex of index $n$ 2 triangles of indices $2*n$ and $2*n+1$, whose vertex is the "left corner" of the square they form, even if the triangles should not be displayed at a time t. 
 
 
 
@@ -285,7 +282,7 @@ You can think of my array as a grid in a snake game where you can go from the le
   ],
 )
 
-If a triangle should not be displayed, I change its indices to $(0, 0, 0)$ and it is no longer visible. We can update the triangle associated with the vertex of indices $(k,l)$ with the following code :
+If a triangle should not be displayed, I change its indices to $(0, 0, 0)$ and it is no longer visible. We can update the triangle associated with the vertex of indices $(k,l)$ with the following code:
 
 ```C
 v1 =  l          +   k*(N+1);
@@ -308,8 +305,7 @@ I have $2*2^(N+1)$ triangles instead of $2^N$ but this structure is more conveni
 
 == Grid position
 
-What will happend concretely for our eyes when the camera moves is that the grid of vertices that represents the sea will also moves after a certain threshold. The grid will always match the infinite grid obtained by extending the initial grid. We always move the vertices by step of $(N+1)*S$ where $S$ is the side of a cell of the infinite grid, such as all points of the actual grid in front of the camera is occupied by exactly one vertex. The following figure illustrates this point.
-
+What will happen concretely for our eyes when the camera moves is that the grid of vertices that represents the sea will also move after a certain threshold. The grid will always match the infinite grid obtained by extending the initial grid. We always move the vertices by step of $(N+1)*S$ where $S$ is the side of a cell of the infinite grid, such as all points of the actual grid in front of the camera is occupied by exactly one vertex. The following figure illustrates this point.
 #figure(
   image("report_figures/grid_moves.png", width: 100%),
   caption: [
@@ -318,7 +314,7 @@ What will happend concretely for our eyes when the camera moves is that the grid
 )
 
 To know when and where to move our vertices, we compute the coordinates $(i, j)$ of our vertices in this virtual grid that follows the camera.
-The formula is given below, $x$ and $z$ being the coordinates of the vertex in the $(x, z)$ plane : 
+The formula is given below, $x$ and $z$ being the coordinates of the vertex in the $(x, z)$ plane: 
 
 $ 
 i &= "round"(( x - "camera".x + W/2)  / S )  \
@@ -327,7 +323,8 @@ j &= "round"(( z - "camera".z + W/2)  / S ) \
         W &= "the width of the grid"
 $
 
-If $i$ or $j$ $in.not \[ 0 comma N \]$ , the vertex is currently outside the grid and it has to be shifted in order to go back into it. The following formula can be used to compute its new coordinates :
+If $i$ or $j$ $in.not \[ 0 comma N \]$ , the vertex is currently outside the grid, and it has to be shifted in order to go back into it. The following formula can be used to compute its new coordinates:
+
 $
 x' &= x + ((i' - i)/ (N+1) ).S.(N+1) \
 z' &= z + ((j' - j)/(N+1)) .S.(N+1) 
@@ -345,7 +342,7 @@ $
   ],
 )
 
-This grid position, also tells us whether we should display the triangles associated with the vertex. In fact, if $i=N$ or $j=N$, we are on the border of the grid and the triangles should not be displayed, since the neighboring vertices are on the other side of the grid. 
+This grid position also tells us whether we should display the triangles associated with the vertex. In fact, if $i=N$ or $j=N$, we are on the border of the grid and the triangles should not be displayed, since the neighboring vertices are on the other side of the grid. 
 
 #linebreak()
 #linebreak()
@@ -353,8 +350,9 @@ This grid position, also tells us whether we should display the triangles associ
 
 == Ray tracing
 
-For now, my ray tracing is rather slow. On my laptop, which dosen't have a good gpu, the simulation works in real time for my default scene which contains 242 triangles. But when I have about 1000 triangles, it becomes very slow. We should implement bouding boxes to reduce the number tested for each ray. To make it effictive, we should have several boxes for our single mesh but the problem is that our mesh is liable to change completly so we would have to recompute the bouding boxes frequentely. It must be more efficient than it is now nonetheless. 
+For now, my ray tracing is rather slow. On my laptop, which doesn’t have a good GPU, the simulation works in real time for my default scene which contains 242 triangles. But when I have about 1000 triangles, it becomes very slow. We should implement bounding boxes to reduce the number tested for each ray. To make it effective, we should have several boxes for our single mesh, but the problem is that our mesh is liable to change completely so we would have to recompute the bounding boxes frequently. It must be more efficient than it is now, nonetheless. 
 
 == Animation computations
 
-The way I update the mesh and implement my physics computations has the particularity of being completly parallelizable. The changes I made for each vertex and its associated triangles depends only on its own coordinates. For now I use OpenMP for each loop to speed up the calculations, but I could implement them on the GPU, for example in a compute shader. In addition to accelerating the computations, we would not have to copy the vertex data from the CPU memory to the GPU one, which also takes a certain amount of time.  
+The way I update the mesh and implement my physics computations has the particularity of being completely parallelizable. The changes I make for each vertex and its associated triangles depend only on its own coordinates. For now, I use OpenMP for each loop to speed up the calculations, but I could implement them on the GPU, for example in a compute shader. In addition to accelerating the computations, we would not have to copy the vertex data from the CPU memory to the GPU one, which also takes a certain amount of time.
+
