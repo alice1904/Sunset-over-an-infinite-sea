@@ -113,9 +113,9 @@ vec3 getBackgroundColor(vec3 rayDirection){
 	//return the color of the sky in this direction
 	float sun_closeness = dot(rayDirection, normalize(lightDirection));
 	vec3 sunColor = vec3(1.0, 1.0, 0.5);
-	vec3 orange =vec3(1.0, 0.63, 0.2); //vec3(1.0, 0.49, 0.2); //vec3(1.0, 0.63, 0.26);
+	vec3 orange =vec3(1.0, 0.63, 0.2); 
 	vec3 pink = vec3(1.0, 0.5, 0.5);
-	vec3 blue = vec3(0.0, 0.0, 0.26);//vec3(0.0, 0.5, 1.0);
+	vec3 blue = vec3(0.0, 0.0, 0.26);
 	float sunThreshold = 0.998;
 	float haloThreshold = 0.99;
 	float pinkSkyThreshold = 0.9;
@@ -196,7 +196,6 @@ bool ray_intersects_triangle(vec3 ray_origin, vec3 ray_direction, vec3 v1, vec3 
 	dist = inv_det * dot(edge2, v1_to_origin_cross_edge1);
 	if(dist<epsilon){
 		//behind the screen. 
-		//TODO far and near with dot product with forward
 		return false; 
 	}
 

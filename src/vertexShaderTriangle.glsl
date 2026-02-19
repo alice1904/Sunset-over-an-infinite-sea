@@ -1,9 +1,6 @@
 #version 430
-//#version 330 core            // Minimal GL version support expected from the GPU
 
 layout(location=0) in vec3 vPosition;
-
-//uniform mat4 viewMat, projMat;
 
 //camera parameters
 uniform vec3 forward; 
@@ -11,7 +8,6 @@ uniform vec3 up;
 uniform vec3 right;
 uniform float half_height;
 uniform float half_width;
-
 
 //ray information
 out vec3 non_normalized_ray_direction; //direction from the origin of the camera to the 'pixel' of the virtual screen.

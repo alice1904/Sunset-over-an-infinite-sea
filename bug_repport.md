@@ -43,5 +43,6 @@ $ offset = cos(w*t-\vec{k}.\vec{x}) $
 
 In our simulation, $\vec{x}$ is the position in the horizontal (x, z) plane.
 
-# TODO 
-- probleme avec redefition sortie
+# Bugs
+
+ray tracing : La couleur renvoyée par les rayons refléchis et réfractés n'étaient pas logiques. J'avais une fonction censée écrire les informations des nouveaux rayons (et notamment leur position et leur direction) dans des variables passées à la fonction par référence. Je redéclarais une variable déclaré comme 'out' (variable de sortie) ce qui fait qu'une fois la fonction terminée, les informations n'étaient pas initialisées. 

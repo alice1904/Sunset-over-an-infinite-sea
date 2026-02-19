@@ -26,8 +26,6 @@ typedef struct {
     float specularRatio;
     float reflectionRatio;
     float refractionRatio;
-
-    //eventually : shininess, refraction indice ?
 } ObjectProperties;
 
 
@@ -42,7 +40,6 @@ class Scene {
 
         //init the geometry
         void init(glm::vec3 cameraCenter);
-        //void printHelp(glm::vec3 cameraCenter);
 
         //compute the forces, 
         //the new state vector 
@@ -82,8 +79,8 @@ class Scene {
 
 
         //spring properties
-        const float springConstantMean = 2.0;//2.0;
-        const float springConstantVariance = 1.0;//1.0;//1.0;
+        const float springConstantMean = 2.0;
+        const float springConstantVariance = 1.0;
         std::vector<float> springConstants; 
 
 

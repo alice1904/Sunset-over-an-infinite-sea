@@ -164,7 +164,7 @@ void initGLFW() {
   // Create the window
   g_window = glfwCreateWindow(
     gWindowWidth, gWindowHeight,
-    "IGR Project Alice Jeannin - Sunset over sea",
+    "IGR Project Alice Jeannin - Sunset over an infinite sea",
     nullptr, nullptr);
   if(!g_window) {
     std::cerr << "ERROR: Failed to open window" << std::endl;
@@ -438,6 +438,7 @@ void render() {
   //clear
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Erase the color and z buffers.
 
+
   //update vertex buffer
   size_t bufferSize;
   std::vector<float> bufferData;
@@ -459,13 +460,14 @@ void render() {
             uintBufferData.data(), GL_DYNAMIC_READ);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, g_triangleSbo);
 
+
   //Scene informations
   glUniform1i(glGetUniformLocation(g_program, "n_triangles"), g_scene.triangleIndices.size());
   glUniform1i(glGetUniformLocation(g_program, "n_objects"), g_scene.objectProperties.size());
   #ifdef _NIGHT
   glUniform3fv(glGetUniformLocation(g_program, "lightDirection"),1,  glm::value_ptr(glm::normalize(lightDirection)));
   #else 
-  glUniform3fv(glGetUniformLocation(g_program, "lightDirection"),1,  glm::value_ptr(glm::normalize(lightDirection)));//0.9, 0.0, -1.0
+  glUniform3fv(glGetUniformLocation(g_program, "lightDirection"),1,  glm::value_ptr(glm::normalize(lightDirection)));
   #endif
   
   //camera informations
@@ -482,6 +484,7 @@ void render() {
   glBindVertexArray(g_vao);     // activate the VAO storing geometry data
   glDrawElements(GL_TRIANGLES, g_triangleIndices.size(), GL_UNSIGNED_INT, 0); // Call for rendering: stream the current GPU geometry through the current GPU program
 
+
   //save the frame
   if(gRecordVideo) {
     savePicture();//save the current frame in the disk
@@ -496,7 +499,7 @@ void update(const float delta) {
 
   //SCENE
   if(!animationPaused){
-    float dt = 1/fps; //fix dt to avoid strange physics
+    float dt = 1/fps; //fix dt to avoid strange physics bug if the computer is to slow and dt is too large
     g_scene.update(dt, g_camera.getCenter());
   }
 
@@ -514,13 +517,7 @@ void update(const float delta) {
 
   //CAMERA
   if(key_shift_pressed){
-    if(key_right_pressed){
-      //g_camera.rotate_right(delta);
-    }
-    else if(key_left_pressed){
-      //g_camera.rotate_left(delta);
-    }
-    else if(key_up_pressed){
+    if(key_up_pressed){
       g_camera.move_up(delta);
     }
     else if(key_down_pressed){

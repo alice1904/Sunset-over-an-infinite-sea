@@ -1,8 +1,12 @@
 # IGR PROJECT - ALICE JEANNIN
 
+
+
 ## CONTENTS
 
-The code to build the project is in the src folder. Little information about the available functionalities can be found in this document below. You will find also a report (made with Latex) in PDF format, a video presenting the project and the PDF of the slides I used for my presentation. As the path is just as important as the destination, I found it interesting to keep a record of the bugs I found and fixed, which is available in the bug_report.md file. Finally, you'll find some pictures and videos of the project in the screenshot folder.
+The code to build the project is in the src folder. Little information about the available functionalities can be found in this document below. You will find also a report (made with typst) in PDF format, a video presenting the project and the the slides I used for my presentation (in PDF and Power Point format). Finally, you'll find some pictures and videos of the project in the screenshot folder.
+
+You can share my project presentation with the other students.
 
 
 ## FUNCTIONALITIES OF THE PROJECT
@@ -28,8 +32,9 @@ You should see a sea on a pink sky.
 
 Here are the different commands:
 - Arrows : move the camera
+- Shift + up/down arrows : rotate the camera to look up or down
 - Shift + left/right arrows : move the sun 
-- R : start saving picture in order to make a video (details are provided at the beginning of main file)
+- R : start/stop saving picture in order to make a video (details are provided at the beginning of main.cpp file)
 - P : pause or unpause the animation
 - ESC or Q : quit
 
