@@ -28,10 +28,6 @@ Then each time I find the closest triangle intersected by a ray, I have to brows
 
 Unfortunately, you cannot have recursive functions in glsl. But ray tracing needs recursion to track all the rays obtained by refraction and reflection. I decided to implement a tree representing the cast rays. To do so I used an array of size $2**(height + 1) - 1$. The nodes are stored in the array's cells. The sons'index of the node of index i are $2*i+1$ and $2*i+2$. For each node I stored a struct containing information about the ray. I first compute the direction and origin of each ray from root to leaves and then compute the final color from leaves to root. 
 
-## sun and gradiennt
-
-blabla
-
 ## Waves
 
 For the sea, I took inspiration from the video game Monument Valley. 
@@ -43,6 +39,3 @@ $ offset = cos(w*t-\vec{k}.\vec{x}) $
 
 In our simulation, $\vec{x}$ is the position in the horizontal (x, z) plane.
 
-# Bugs
-
-ray tracing : La couleur renvoyée par les rayons refléchis et réfractés n'étaient pas logiques. J'avais une fonction censée écrire les informations des nouveaux rayons (et notamment leur position et leur direction) dans des variables passées à la fonction par référence. Je redéclarais une variable déclaré comme 'out' (variable de sortie) ce qui fait qu'une fois la fonction terminée, les informations n'étaient pas initialisées. 
