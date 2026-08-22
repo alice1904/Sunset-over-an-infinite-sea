@@ -1,7 +1,7 @@
 
 # Sunset over an infinite sea
 
-This project aims to render a sea using ray tracing in OpenGL.
+This project aims to render an animated sea using ray tracing in OpenGL.
 
 <img width="1024" height="768" alt="night_waves4" src="https://github.com/user-attachments/assets/44fe591d-e699-41b9-bc3e-a73432c6f0cc" />
 
