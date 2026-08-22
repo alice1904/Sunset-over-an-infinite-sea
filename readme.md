@@ -1,5 +1,7 @@
 
-# IGR PROJECT - ALICE JEANNIN
+# Sunset over an infinite sea
+
+This project aims to render a sea using ray tracing in OpenGL.
 
 <img width="1024" height="768" alt="night_waves4" src="https://github.com/user-attachments/assets/44fe591d-e699-41b9-bc3e-a73432c6f0cc" />
 
@@ -11,9 +13,7 @@ https://github.com/user-attachments/assets/45f181e9-e540-4e05-bffa-b38cea9554b4
 
 ## CONTENTS
 
-The code to build the project is in the src folder. Little information about the available functionalities can be found in this document below. You will find also a report (made with typst) in PDF format, a video presenting the project and the the slides I used for my presentation (in PDF and Power Point format). Finally, you'll find some pictures and videos of the project in the screenshot folder.
-
-You can share my project presentation with the other students.
+The code to build the project is in the src folder. Little information about the available functionalities can be found in this document below. You will find also a report (made with typst) in PDF format and the the slides I used to present the project. Finally, you'll find some pictures and videos of the project in the screenshot folder.
 
 
 ## FUNCTIONALITIES OF THE PROJECT
