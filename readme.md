@@ -13,7 +13,7 @@ https://github.com/user-attachments/assets/45f181e9-e540-4e05-bffa-b38cea9554b4
 
 ## CONTENTS
 
-The code to build the project is in the src folder. Little information about the available functionalities can be found in this document below. You will find also a report (made with typst) in PDF format and the the slides I used to present the project. Finally, you'll find some pictures and videos of the project in the screenshot folder.
+The code to build the project is in the src folder. Little information about the available functionalities can be found in this document below. You will find also a report (made with typst) in PDF format and the slides I used to present the project. Finally, you'll find some pictures and videos of the project in the screenshot folder.
 
 
 ## FUNCTIONALITIES OF THE PROJECT
@@ -51,12 +51,12 @@ Here are the different commands:
 You can change macros at the beginning of some files to modify some properties :
 
 ```main.cpp```
-* _CLOSE_VIEW : this macro tells us where to place the camera. If it is not define, we'll see the whole sea square afar
+* _CLOSE_VIEW : this macro tells us where to place the camera. If it is not define, you'll see the whole sea square afar
 * _NIGHT : if it is defined, it will set the sun behind you when the program starts.
 
 
 ```scene.h```
-* _HIGH_RESOLUTION : if it is defined, there will be more triangles. The animation should be slower.
+* _HIGH_RESOLUTION : if it is defined, there will be more triangles. The animation might be slower.
 
 
 ```fragmentShaderTriangle.glsl```
